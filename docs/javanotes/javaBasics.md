@@ -4733,3 +4733,252 @@ JMM
 悲观锁、乐观锁、CAS
 原子性
 并发工具类
+
+
+
+## 网络编程
+
+### 什么是网络编程
+
+在网络通信协议下，不同计算机上运行的程序，进行的数据传输。
+
+- 应用场景:即时通信、网游对战、金融证券、国际贸易、邮件、等等。
+- 不管是什么场景，都是计算机跟计算机之间通过网络进行数据传输。
+- Java中可以使用java.net包下的技术轻松开发出常见的网络应用程序。
+
+#### 总结
+
+1. 什么网络编程?
+
+   计算机跟计算机之间通过网络进行数据传输。
+
+2. 常见软件架构有哪些?
+
+   CS / BS
+
+3. 通信的软件架构 CS \ BS 的各有什么区别和优缺点
+
+   CS: 客户端服务端模式需要开发客户端
+
+   BS: 浏览器服务端模式不需要开发客户端。
+
+   CS: 适合定制专业化的办公类软件 如: IDEA、网游
+
+   BS: 适合移动互联网应用，可以在任何地方随时访问的系统。
+
+### 网络编程三要素分别是什么
+
+- IP
+
+- 端口号
+
+- 协议
+
+- 网络编程三要素分别表示什么?
+
+  - lP: 设备在网络中的地址，是唯一的标识
+
+  - 端口号: 应用程序在设备中唯一的标识。
+
+  - 协议:  
+
+    数据在网络中传输的规则
+
+    常见的协议有UDP、TCP、http、https、ftp
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/ipv6.png)
+
+
+
+#### IP
+
+1. lp的作用
+
+   设备在网络中的地址，是唯一的标识
+
+2. IPv4有什么特点
+
+   目前的主流方案
+   最多只有2^32次方个ip，目前已经用完了
+
+3. IPv6有什么特点
+
+   为了解决IPv4不够用而出现的最多有 2^128 次方个 ip
+   可以为地球上的每一粒沙子都设定 ip
+
+##### IPv4的小细节
+
+1. 现在如何解决IPv4不够的问题?
+
+   利用局域网IP解决IP不够的问题
+
+2. 特殊的IP是什么?
+
+   127.0.0.1(永远表示本机)
+
+3. 常见的两个CMD命令?
+
+   ipconfig:  查看本机
+
+   IP 地址 ping:  检查网络是否连通
+
+#### 端口号
+
+应用程序在设备中唯一的标识。
+
+端口号: 由两个字节表示的整数，取值范围: 0~65535
+
+其中 0~1023 之间的端口号用于一些知名的网络服务或者应用。我们自己使用1024以上的端口号就可以了。
+
+注意:  一个端口号只能被一个应用程序使用。
+
+#### 协议
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/wlbcxy.png)
+
+计算机网络中，连接和通信的规则被称为网络通信协议
+
+UDP协议
+
+用户数据报协议 (User Datagram Protocol) UDP 是面向无连接通信协议。
+
+速度快，有大小限制一次最多发送64K，数据不安全，易丢失数据
+
+TCP 协议
+
+传输控制协议 TCP (Transmission Control Protocol) TCP 协议是面向连接的通信协议。
+
+速度慢，没有大小限制，数据安全。
+
+### UDP协议发送数据
+
+```java
+// 1.创建DatagramSocket对象(快递公司)
+// 细节:
+// 绑定端口，以后我们就是通过这个端口往外发送
+// 空参: 所有可用的端口中随机一个进行使用
+// 有参: 指定端口号进行绑定
+DatagramSocket ds = new DatagramSocket();
+
+// 2.打包数据
+String str = "你好威啊!!!";
+byte[] bytes = str.getBytes();
+InetAddress address = InetAddress.getByName("127.0.0.1");
+int port = 10086;
+DatagramPacket dp = new DatagramPacket(bytes,bytes.length,address, port);
+
+// 3.发送数据
+ds.send(dp);
+
+// 4.释放资源
+ds.close();
+```
+
+### UDP接收数据
+
+```java
+// 接收数据
+// 1.创建DatagramSocket对象（快递公司)
+//细节:
+// 在接收的时候，一定要绑定端口
+// 而且绑定的端口一定要跟发送的端口保持一致
+DatagramSocket ds = new DatagramSocket( port: 10086);
+
+// 2.接收数据包
+byte[] bytes = new byte[1024];
+DatagramPacket dp = new DatagramPacket(bytes,bytes.length);ds.receive(dp);
+
+//3.解析数据包
+byte[] data = dp.getData();
+int len = dp.getLength();
+InetAddress address = dp.getAddress();
+int port = dp.getPort();
+System.out.print1n("接收到数据" + new String(data,0,len));
+System.out.print1n("该数据是从" + address + "这台电脑中的" + port + "这个端口发出的");
+
+// 4.释放资源
+ds.close();
+```
+
+### InetAddress
+
+- `static InetAddress getByName(string host)`	确定主机名称的IP地址。主机名称可以是机器名称，也可以是IP地址
+- `String getHostName()`	获取此IP地址的主机名
+- `String getHostAddress()`	返回文本显示中的IP地址字符串
+
+如：
+
+```java
+// 1.获取InetAddress的对象
+// IP的对象一台电脑的对象
+InetAddress address = InetAddress.getByName("DESKTOP-5033SAM");
+System.out.println(address);
+String name = address.getHostName();
+System.out.println(name); // DESKTOP-5033SAM
+String ip = address.getHostAddress();
+System.out.println(ip); //192.168.1.100
+```
+
+### UDP的三种通信方式
+
+1. 单播
+
+   以前的代码就是单播
+
+2. 组播
+
+   组播地址: 224.0.0.0 ~ 239.255.255.255
+
+   其中 224.0.0.0~224.0.0.255 为预留的组播地址
+
+3. 广播
+
+   广播地址: 255.255.255.255
+
+```java
+组播发送端代码
+    
+// 创建Multicastsocket对象
+Multicastsocket ms = new MulticastSocket();
+
+// 创建DatagramPacket对象
+String s = "你好,你好!”;
+byte[] bytes = s.getBytes();
+InetAddress address = InetAddress.getByName("224.0.0.1");
+int port = 10000;
+DatagramPacket datagramPacket = new DatagramPacket(bytes， bytes.length，address，port) ;
+
+// 调用MulticastSocket发送数据方法发送数据
+ms .send(datagramPacket);
+
+// 释放资源
+ms.close();
+```
+
+```java
+组播接收端代码
+
+// 1、创建Multicastsocket对象
+Multicastsocket ms = new MulticastSocket(10000);
+
+// 2．将将当前本机，添加到224.0.8.1的这一组当中
+InetAddress address = InetAddress.getByName("224.0.0.1");ms.joinGroup( address);
+
+// 3．创建DatagramPacket数据包对象
+byte[] bytes = new byte[1024];
+DatagramPacket dp = new DatagramPacket(bytes, bytes.length);
+
+// 4．接收数据
+ms.receive(dp);
+
+//5．解析数据
+byte[] data = dp.getData();
+int len = dp.getLength();
+String ip = dp.getAddress().getHostAddress();
+String name = dp.getAddress().getHostName();
+System.out.printIn("ip为: " + ip + "",主机名为:"+ name + “的人，发送了数据: ”+ new String(data,0,len));
+
+// 释放资源
+ms.close();
+```
+
