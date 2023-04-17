@@ -1,28 +1,19 @@
-# code_docs
+# # 编程文档
 
-[![NPM version](https://img.shields.io/npm/v/code_docs.svg?style=flat)](https://npmjs.org/package/code_docs)
-[![NPM downloads](http://img.shields.io/npm/dm/code_docs.svg?style=flat)](https://npmjs.org/package/code_docs)
+基于 dumi2 
 
-编程文档
+dumi2：[dumi - 为组件研发而生的静态站点框架 (umijs.org)](https://d.umijs.org/)
 
-## Usage
-
-TODO
-
-## Options
-
-TODO
-
-## Development
+## 开始
 
 ```bash
-# install dependencies
+# 安装依赖
 $ npm install
 
-# develop library by docs demo
+# 开发运行
 $ npm start
 
-# build library source code
+# build library source code 打包
 $ npm run build
 
 # build library source code in watch mode
@@ -34,7 +25,3 @@ $ npm run docs:build
 # check your project for potential problems
 $ npm run doctor
 ```
-
-## LICENSE
-
-MIT
