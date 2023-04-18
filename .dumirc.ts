@@ -10,6 +10,6 @@ export default defineConfig({
   history: {
     type: "hash"
   },
-  base: "/code_docs/",
-  publicPath: "/code_docs/"
+  base: "/docs-dist/",
+  publicPath: "/docs-dist/"
 });
