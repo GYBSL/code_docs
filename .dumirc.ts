@@ -1,7 +1,7 @@
 import { defineConfig } from 'dumi';
 
 export default defineConfig({
-  outputPath: 'dist',
+  outputPath: 'docs-dist',
   themeConfig: {
     name: '编程文档',
     logo: "/logo.jpg",
@@ -10,6 +10,6 @@ export default defineConfig({
   history: {
     type: "hash"
   },
-  base: "/dist/",
-  publicPath: "/dist/"
+  base: "/code_docs/",
+  publicPath: "/code_docs/"
 });
