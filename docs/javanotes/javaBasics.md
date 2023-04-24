@@ -4982,3 +4982,390 @@ System.out.printIn("ip为: " + ip + "",主机名为:"+ name + “的人，发送
 ms.close();
 ```
 
+### TCP通信程序
+
+TCP通信协议是一种可靠的网络协议，它在通信的两端各建立一个Socket对象
+
+通信之前要保证连接已经建立
+
+通过Socket产生IO流来进行网络通信
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/tcp1.png)
+
+```java
+客户端
+
+1. 创建客户端的Socket对象(Socket)与指定服务端连接
+    Socket(String host，int port)
+2. 获取输出流，写数据
+	Outputstream getOutputStream()
+3. 释放资源
+	void close()
+    
+    
+服务器端
+
+1. 创建服务器端的Socket对象(ServerSocket)
+    Serversocket(int port)
+2. 监听客户端连接，返回一个Socket对象
+    Socket accept()
+3. 获取输入流，读数据，并把数据显示在控制台
+    Inputstream getInputstream()
+4. 释放资源
+	void close()
+```
+
+如：
+
+```java
+客户端
+    
+// TCP协议，发送数据
+// 1.创建Socket对象
+// 细节: 在创建对象的同时会连接服务端
+// 如果连接不上，代码会报错
+Socket socket = new Socket("127.0.0.1", 10000); // ip和端口
+
+// 2.可以从连接通道中获取输出流
+Outputstream os = socket.getOutputStream();
+// 写出数据
+os.write("你好你好".getBytes());
+
+// 3.释放资源
+os.close();
+socket.close();
+```
+
+```java
+服务器端
+    
+// TCP 协议，接收数据
+// 1. 创建对象ServerSocker
+Serversocket ss = new ServerSocket(10000);
+
+// 2.监听客户端的链接
+socket socket = ss.accept();
+
+// 3.从连接通道中获取输入流读取数据
+Inputstream is = socket.getInputStream();
+InputStreamReader isr = new InputStreamReader(is); // 转换流，将字节流转换成字符流，解决中文乱码的问题
+
+int b;
+while((b = is.read()) != -1){
+	System.out.print((char) b);
+}
+
+//4.释放资源
+socket.close();
+ss.close();
+```
+
+
+
+
+
+## 反射
+
+什么是反射?
+
+反射允许对成员变量，成员方法和构造方法的信息进行编程访问
+
+### 获取class对象的三种方式
+
+1. class.forName( "全类名");
+2. 类名.class
+3. 对象.getclass();
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/fanshe1.png)
+
+如：
+
+```java
+// 1．第一种方式
+// 全类名: 包名＋类名
+class clazz1 = Class.forName( "com.itheima .myreflect1.Student");
+
+// 2．第二种方式
+class clazz2 = Student.class;
+
+// 3.第三种方式
+Student s = new Student();
+Class clazz3 = s.getclass();
+
+System.out. print1n(clazz1 == clazz2); // true
+System.out.println(clazz2 == clazz3); // true
+```
+
+### 利用反射获取构造方法
+
+Class类中用于获取构造方法的方法
+
+- `Constructor<?>[] getConstructors()`:  返回所有公共构造方法对象的数组
+- `Constructor<?>[] getDeclaredConstructors()`:  返回所有构造方法对象的数组
+- `Constructor<T> getConstructor(Class<?>... parameterTypes)`:  返回单个公共构造方法对象
+- `Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes)`:  返回单个构造方法对象
+
+
+
+`Constructor ` 类中用于创建对象的方法
+
+- `T newInstance(Object... initargs)`:  根据指定的构造方法创建对象
+
+- `setAccessible(boolean flag)`:  设置为true,表示取消访问检查
+
+
+
+如：
+
+```java
+// 1.获取class字节码文件对象
+class clazz = class.forName("com.itheima.myreflect2.student");
+
+// 2.获取构造方法
+Constructor[] cons = clazz.getConstructors();
+for (Constructor con: cons){
+	System.out.println(con);
+}
+
+// 获取所有构造方法
+Constructor[] cons2 = clazz.getDeclaredconstructors();
+
+// 获取空参构造
+constructor con1 = clazz.getDeclaredconstructor();
+
+// 获取一个参数为String类型的构造方法
+Constructor con2 = clazz.getDeclaredConstructor(String.class);
+
+// 获取两个参数的构造方法
+Constructor con4 = clazz.getDeclaredConstructor(String.class,int.class);
+
+// 获取构造方法的权限修饰符，返回的是一个int类型的数字
+int modifiers = con4.getModifiers();
+
+// 获取所有的构造方法的参数
+Parameter[] parameters = con4.getParameters();
+
+
+con4.setAccessible(true); // 暴力反射: 表示临时取消权限校验
+Student stu = (Student) con4.newInstance("张三",23);
+```
+
+
+
+### 利用反射获取成员变量
+
+Class类中用于获取成员变量的方法
+
+- `Field[] getFields()`:  返回所有公共成员变量对象的数组
+- `Field[] getDeclaredFields()`:  返回所有成员变量对象的数组
+- `Field getField(String name)`:  返回单个公共成员变量对象
+- `Field getDeclaredField(String name)`:  返回单个成员变量对象
+
+`Field` 类中用于创建对象的方法
+
+- `void set(Object obj, Object value)`:  赋值
+- `Object get(Object obj)` 获取值。
+
+如：
+
+```java
+// 1.获取class字节码文件对象
+class clazz = class.forName("com.itheima.myreflect2.student");
+
+// 获取单个的成员变量
+Field name = clazz.getDeclaredField("name");
+
+// 获取权限修饰符
+int modifiers = name.getModifiers();
+
+// 获取成员变量的名字
+String n = name.getName();
+
+// 获取成员变量的数据类型
+Class<?> type = name.getType();
+
+// 获取成员变量记录的值
+Student s = new Student("zhangsan",23,"男");
+name.setAccessible(true);
+Object value = name.get(s);
+
+//修改对象里面记录的值
+name.set(s,"lisi");
+```
+
+### 反射获取成员方法
+
+Class 类中用于获取成员方法的方法
+
+- `Method[] getMethods()`:  返回所有公共成员方法对象的数组，包括继承的
+- `Method[] getDeclaredMethods()`:  返回所有成员方法对象的数组，不包括继承的
+- `Method getMethod(String name, Class<?>... parameterTypes)`:  返回单个公共成员方法对象
+- `Method getDeclaredMethod(String name, Class<?>... parameterTypes)`:  返回单个成员方法对象
+
+Method 类中用于创建对象的方法
+
+- `Object invoke(Object obj, Object... args)`:  运行方法
+  - 参数一:  用obj对象调用该方法
+  - 参数二:  调用方法的传递的参数（如果没有就不写)
+  - 返回值:  方法的返回值（如果没有就不写)
+
+如：
+
+```java
+// 1．获取class字节码文件对象
+Class clazz = class.forName("com.itheima.myreflect4.Student");
+
+// 2．获取里面所有的方法对象(包含父类中所有的公共方法)
+Method[] methods = clazz.getMethods();
+
+// 获取里面所有的方法对象(不能获取父类的，但是可以获取本类中私有方法)
+Method[] methods = clazz.getDeclaredMethods();
+
+// 获取指定的单一方法
+Method m = clazz.getDeclaredMethod("eat",String.class);
+
+// 获取方法的修饰符
+int modifiers = m.getModifiers();
+
+// 获取方法的名字
+String name = m.getName();
+
+// 获取方法的形参
+Parameter[] parameters = m.getParameters();
+
+// 获取方法的抛出的异常
+Class[] exceptionTypes = m.getExceptionTypes();
+
+// 方法运行
+Student s = new Student();
+m.setAccessible(true);
+// 参数一s: 表示方法的调用者
+// 参数二"汉堡":  表示在调用方法的时候传递的实际参数
+// 可接收方法的返回值
+String result = (String) m.invoke(s,"汉堡");
+```
+
+### 反射的作用
+
+1. 获取一个类里面所有的信息，获取到了之后，再执行其他的业务逻辑
+2. 结合配置文件，动态的创建对象并调用方法
+
+如：
+
+```java
+// 1.获取字节码文件的对象
+Class clazz = obj.getclass();
+
+// 2．创建I0流
+Bufferedwriter bw = new Bufferedwriter(new Filewriter("myreflect\\a.txt"));
+
+// 3．获取所有的成员变量
+Field[] fields = clazz.getDeclaredFields();
+for (Field field : fields) {
+    field.setAccessible(true);	//获取成员变量的名字
+    String name = field.getName();	//获取成员变量的值
+    Object value = field.get(obj);	//写出数据
+    bw.write(name + "=" + value);
+    bw.newLine();
+}
+
+bw.close();
+```
+
+```java
+// 1.读取配置文件中的信息
+Properties prop = new Properties();
+FileInputStream fis = new FileInputStream("myreflect\\prop.properties");
+prop.load(fis);
+fis.close();
+
+// 2.获取全类名和方法名
+String className = (String) prop.get("classname");
+String methodName = (String) prop.get("method");
+
+// 3.利用反射创建对象并运行方法
+class clazz = class.forName(className);
+
+// 获取构造方法
+Constructor con = clazz.getDeclaredConstructor();
+Object o = con.newInstance();
+
+// 获取成员方法并运行
+Method method = clazz.getDeclaredMethod(methodName);
+method.setAccessible(true); 
+method.invoke(o);
+```
+
+### 总结
+
+1. 反射的作用
+   - 获取任意一个类中的所有信息
+   - 结合配置文件动态创建对象
+2. 获得 class 字节码文件对象的三种方式
+   - Class.forName("全类名");
+   - 类名.class
+   - 对象.getClass();
+3. 如何获取构造方法、成员方法、成员变量
+   get: 获取
+   set: 设置
+   Constructor: 构造方法
+   Parameter: 参数
+   Field: 成员变量
+   Modifiers: 修饰符
+   Method: 方法
+   Declared: 私有的
+
+## 动态代理
+
+什么是动态代理?
+
+特点:  无侵入式的给代码增加额外的功能
+
+- 为什么需要代理?
+
+  代理可以无侵入式的给对象增强其他的功能
+
+- 代理长什么样?
+
+  代理里面就是对象要被代理的方法
+
+- Java通过什么来保证代理的样子?
+
+  通过接口保证，后面的对象和代理需要实现同一个接口
+
+  接口中就是被代理的所有方法
+
+### 如何为 Java 对象创建一个代理对象?
+
+`java.lang.reflect.Proxy`类:  提供了为对象产生代理对象的方法:
+
+`public static Object newProxyInstance(ClassLoader loader,Class<?>[] interfaces，InvocationHandler h)`
+
+参数一:  用于指定用哪个类加载器，去加载生成的代理类
+
+参数二:  指定接口，这些接口用于指定生成的代理长什么，也就是有哪些方法
+
+参数三:  用来指定生成的代理对象要干什么事情
+
+如：
+
+```java
+Star star = (Star) Proxy.newProxyInstance(
+    // ProxyUtil是自己创建的一个类
+    ProxyUtil.class.getClassLoader(),	// 参数一: 用于指定用哪个类加载器，去加载生成的代理类
+    new class[]{Star.class},	// 参数二: 指定接口，这些接口用于指定生成的代理长什么，也就是有哪些方法
+    // 参数三:用来指定生成的代理对象要干什么事情
+    new InvocationHandler() {
+    	@Override
+    	public Object invoke(0bject proxy，Method method,object[] args) throws Throwable {
+    		// 参数一: 代理的对象
+            // 参数二: 要运行的方法
+            // 参数三: 调用要运行的方法时，传递的实参
+
+    		return method.invoke(bigStar,args);
+    	}
+    }
+);
+return star;
+```
+
