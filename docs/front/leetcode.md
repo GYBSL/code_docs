@@ -1,9 +1,14 @@
 ---
-title: 前端
-order: 4
+title: 力扣算法刷题
+order: 1
+nav:
+  title: 前端
+  order: 2
+group:
+  title: 前端
+  order: 1
 ---
 
-# 力扣算法刷题
 
 ## 第 9 题 回文数
 

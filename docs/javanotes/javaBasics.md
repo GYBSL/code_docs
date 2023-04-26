@@ -1,9 +1,14 @@
 ---
-order: 3
-title: java后端
+title: Java 基础笔记
+order: 1
+nav:
+  title: Java后端
+  order: 3
+group: 
+  title: Java后端
+  order: 1
 ---
 
-## java基础笔记
 
 从集合开始的笔记，因为集合之前偷懒没做笔记（V✪ω✪V!）
 
