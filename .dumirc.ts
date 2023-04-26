@@ -10,6 +10,6 @@ export default defineConfig({
   history: {
     type: "hash"
   },
-  base: "/code_docs/",
-  publicPath: "/code_docs/"
+  base: "/", // 文档起始路由
+  publicPath: "/docs-dist/" // 静态资源起始路径
 });
