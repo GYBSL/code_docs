@@ -4,7 +4,7 @@ export default defineConfig({
   outputPath: 'docs-dist',
   themeConfig: {
     name: '编程文档',
-    logo: "./logo.jpg",
+    logo: "/code_docs/logo.jpg",
     footer: "别看我,看代码！"
   },
   history: {
