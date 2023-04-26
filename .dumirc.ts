@@ -7,6 +7,7 @@ export default defineConfig({
     logo: "/code_docs/logo.jpg",
     footer: "别看我,看代码！"
   },
+  favicons: ['/code_docs/favicon.ico'],
   history: {
     type: "hash"
   },
