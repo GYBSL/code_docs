@@ -7,14 +7,6 @@ export default defineConfig({
     logo: "/logo.jpg",
     footer: "别看我,看代码！"
   },
-  // nav: {
-  //   mode: "override",
-  //   value: [
-  //     { title: '开发总结', link: '/summary/vantSp'},
-  //     { title: 'java后端', link: '/javanotes/javaBasics'},
-  //     { title: '前端', link: '/front'},
-  //   ]
-  // },
   history: {
     type: "hash"
   },
