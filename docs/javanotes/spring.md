@@ -234,7 +234,7 @@ Spring是一个开源框架，它由Rod Johnson创建。它是为了解决企业
 
 官网地址（中文）：http://spring.p2hp.com/
 
-### Spring的下载
+### Spring的下载引入
 
 注意
 
@@ -306,3 +306,446 @@ Spring是一个开源框架，它由Rod Johnson创建。它是为了解决企业
 </project>
 ```
 
+
+
+引入依赖之后，需要创建一个.xml配置文件
+
+```xml
+<! --这就是Spring 的配置文件-->
+<! --IDEA工具为我们提供了这个文件的模板，一定要使用这个模板来创建。-->
+<! --这个文件名不一定叫做spring.xml，可以是其它名字。-->
+<! --这个文件最好是放在类路径当中，方便后期的移植。-->
+<! --放在resources根目录下，就相当于是放到了类的根路径下。-->
+<! --配置bean，这样spring才可以帮助我们管理这个对象。->
+
+bean标签的两个重要属性:
+	id:是这个bean的身份证号，不能重复，是唯一的标识。
+	class:必须填写类的全路径，全限定类名。（带包名的类名)
+
+如：
+// bean.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <bean id="userBean" class="com.powernode.spring6.bean.User"/>
+</beans>
+```
+
+
+
+### spring 的第一个程序
+
+1. 先在pom.xml中引入相关依赖
+
+   如：
+
+   ```java
+   // pom.xml 中引入相关jar包依赖
+   
+   <?xml version="1.0" encoding="UTF-8"?>
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+       <modelVersion>4.0.0</modelVersion>
+   
+       <groupId>com.powernode</groupId>
+       <artifactId>spring6-001-first</artifactId>
+       <version>1.0-SNAPSHOT</version>
+       <packaging>jar</packaging>
+   
+       <repositories>
+           <repository>
+               <id>repository.spring.milestone</id>
+               <name>Spring Milestone Repository</name>
+               <url>https://repo.spring.io/milestone</url>
+           </repository>
+       </repositories>
+   
+       <dependencies>
+           <!--spring context依赖-->
+           <dependency>
+               <groupId>org.springframework</groupId>
+               <artifactId>spring-context</artifactId>
+               <version>6.0.0-M2</version>
+           </dependency>
+           <!--junit-->
+           <dependency>
+               <groupId>junit</groupId>
+               <artifactId>junit</artifactId>
+               <version>4.13.2</version>
+               <scope>test</scope>
+           </dependency>
+       </dependencies>
+   
+       <properties>
+           <maven.compiler.source>17</maven.compiler.source>
+           <maven.compiler.target>17</maven.compiler.target>
+       </properties>
+   
+   </project>
+               
+               
+   // 注意：打包方式jar
+   // spring aop：面向切面编程
+   // spring beans：IoC核心
+   // spring core：spring的核心工具包
+   // spring jcl：spring的日志包
+   // spring expression：spring表达式
+   ```
+
+2. 在main下新建包并创建所需类
+
+   如：
+
+   ```java
+   // User.javas
+   
+   package com.gybsl.bean;
+   
+   public class User {
+   }
+   ```
+
+   
+
+3. 在src/main/resources中创建xml配置文件,**该文件放在类的根路径下**
+
+   如：
+
+   ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring1_1.png)
+
+   ```java
+   // beans.xml
+   
+   <?xml version="1.0" encoding="UTF-8"?>
+   <beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       
+       <bean id="userBean" class="com.powernode.spring6.bean.User"/>
+   </beans>
+           
+           
+   bean的id和class属性：
+   ● id属性：代表对象的唯一标识。可以看做一个人的身份证号。
+   ● class属性：用来指定要创建的java对象的类名，这个类名必须是全限定类名（带包名）。
+   ```
+
+4. 然后编写测试程序
+
+   ```java
+   package com.gybsl.test;
+   
+   import org.junit.Test;
+   import org.springframework.context.ApplicationContext;
+   import org.springframework.context.support.ClassPathXmlApplicationContext;
+   
+   public class Spring6Test {
+   
+       @Test
+       public void testFirst(){
+           // 初始化Spring容器上下文（解析beans.xml文件，创建所有的bean对象）
+           ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+           // 根据id获取bean对象,这里的id是xml中bean标签设置的id
+           Object userBean = applicationContext.getBean("userBean");
+           System.out.println(userBean);
+       }
+   }
+   ```
+
+#### 第一个Spring程序详细剖析
+
+- 在spring的配置文件中id是不能重名。
+
+  - 在spring的配置文件中id是不能重名。
+
+- 底层是怎么创建对象的，是通过反射机制调用无参数构造方法吗？
+
+  - 创建对象时确实调用了无参数构造方法
+
+- 如果提供一个有参数构造方法，不提供无参数构造方法会怎样呢？
+
+  - spring是通过调用类的无参数构造方法来创建对象的，所以要想让spring给你创建对象，必须保证无参数构造方法是存在的
+
+- Spring是如何创建对象的呢？原理是什么？
+
+  - dom4j (一个xml文件解析工具) 解析beans.xml文件，从中获取class的全限定类名
+  - 通过反射机制调用无参数构造方法创建对象
+
+- 把创建好的对象存储到一个什么样的数据结构当中了呢？
+
+  - 会存储在 `Map<String,Object>` 类型中
+  - 如：![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring1_2.png)
+
+- spring配置文件的名字必须叫做beans.xml吗？
+
+  - xml配置文件的名字随意
+
+- 像这样的beans.xml文件可以有多个吗？
+
+  - spring的配置文件可以有多个，在ClassPathXmlApplicationContext构造方法的参数上传递文件路径即可
+
+  - ```java
+    如：
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml","spring.xml");
+    ```
+
+- 在配置文件中配置的类必须是自定义的吗，可以使用JDK中的类吗，例如：java.util.Date？
+
+  - 在 spring 配置文件中配置的 bean 可以任意类，只要这个类不是抽象的，并且提供了无参数构造方法
+
+- `getBean()`方法调用时，如果指定的id不存在会怎样？
+
+  - 当 id 不存在的时候，会出现异常
+
+- getBean()方法返回的类型是Object，如果访问子类的特有属性和方法时，还需要向下转型，有其它办法可以解决这个问题吗？
+
+  - ```java
+    如：
+        // 将该类的字节码文件传过去
+        User user = applicationContext.getBean("userBean", User.class);
+    ```
+
+- ClassPathXmlApplicationContext是从类路径中加载配置文件，如果没有在类路径当中，又应该如何加载配置文件呢？
+
+  - 没有在类路径中的话，需要使用FileSystemXmlApplicationContext类进行加载配置文件。
+
+    这种方式较少用。一般都是将配置文件放到类路径当中，这样可移植性更强。
+
+- `ApplicationContext`的超级父接口`BeanFactory`
+
+  - ```java
+    BeanFactory是ApplicationContext的最上层父接口
+    BeanFactory是Spring容器的超级接口。ApplicationContext是BeanFactory的子接口
+    如：
+        
+    BeanFactory beanFactory = new ClassPathXmlApplicationContext("spring.xml");
+    Object vipBean = beanFactory.getBean("vipBean");
+    System.out.println(vipBean);
+    ```
+
+
+
+### Spring6启用Log4j2日志框架
+
+1. 引入Log4j2的依赖
+
+   ```java
+   <!--log4j2的依赖-->
+   <dependency>
+     <groupId>org.apache.logging.log4j</groupId>
+     <artifactId>log4j-core</artifactId>
+     <version>2.19.0</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.logging.log4j</groupId>
+     <artifactId>log4j-slf4j2-impl</artifactId>
+     <version>2.19.0</version>
+   </dependency>
+   ```
+
+2. 在类的根路径下提供log4j2.xml配置文件（文件名固定为：log4j2.xml，文件必须放到类根路径下。）,如在resource目录中创建
+
+   ```java
+   // log4j2.xml中
+   
+   <?xml version="1.0" encoding="UTF-8"?>
+   
+   <configuration>
+   
+       <loggers>
+           <!--
+               level指定日志级别，从低到高的优先级：
+                   ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
+           -->
+           <root level="DEBUG">
+               <appender-ref ref="spring6log"/>
+           </root>
+       </loggers>
+   
+       <appenders>
+           <!--输出日志信息到控制台-->
+           <console name="spring6log" target="SYSTEM_OUT">
+               <!--控制日志输出的格式-->
+               <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss SSS} [%t] %-3level %logger{1024} - %msg%n"/>
+           </console>
+       </appenders>
+   
+   </configuration>
+   ```
+
+3. 使用日志框架
+
+   ```java
+   Logger logger = LoggerFactory.getLogger(FirstSpringTest.class);
+   logger.info("我是一条日志消息");
+   ```
+
+
+
+### Spring对IoC的实现
+
+#### IoC 控制反转
+
+- 控制反转是一种思想。
+- 控制反转是为了降低程序耦合度，提高程序扩展力，达到OCP原则，达到DIP原则。
+- 控制反转，反转的是什么？
+
+- - 将对象的创建权利交出去，交给第三方容器负责。
+  - 将对象和对象之间关系的维护权交出去，交给第三方容器负责。
+
+- 控制反转这种思想如何实现呢？
+
+- - DI（Dependency Injection）：依赖注入
+
+#### 依赖注入
+
+依赖注入实现了控制反转的思想。
+
+Spring通过依赖注入的方式来完成Bean管理的。
+
+Bean管理说的是：Bean对象的创建，以及Bean对象中属性的赋值（或者叫做Bean对象之间关系的维护）。
+
+依赖注入：
+
+- 依赖指的是对象和对象之间的关联关系。
+- 注入指的是一种数据传递行为，通过注入行为来让对象和对象产生关系。
+
+依赖注入常见的实现方式包括两种：
+
+- 第一种：set注入
+- 第二种：构造注入
+
+##### set注入
+
+- 具体实现步骤可以看动力节点的文档
+
+set注入，基于set方法实现的，底层会通过反射机制调用属性对应的set方法然后给属性赋值。这种方式要求属性必须对外提供set方法。
+
+```java
+// 如下
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="userDaoBean" class="com.powernode.spring6.dao.UserDao"/>
+
+    <bean id="userServiceBean" class="com.powernode.spring6.service.UserService">
+        <property name="userDao" ref="userDaoBean"/>
+    </bean>
+
+</beans>
+```
+
+实现原理：
+
+通过property标签获取到属性名：userDao
+
+通过属性名推断出set方法名：setUserDao
+
+通过反射机制调用setUserDao()方法给属性赋值
+
+property标签的name是属性名。
+
+property标签的ref是要注入的bean对象的id。**(通过ref属性来完成bean的装配，这是bean最简单的一种装配方式。装配指的是：创建系统组件之间关联的动作)**
+
+
+
+property标签的name是：setUserDao()方法名演变得到的。演变的规律是：
+
+- setUsername() 演变为 username
+- setPassword() 演变为 password
+- setUserDao() 演变为 userDao
+- setUserService() 演变为 userService
+
+另外，对于property标签来说，ref属性也可以采用标签的方式，但使用ref属性是多数的：
+
+```java
+<bean id="userServiceBean" class="com.powernode.spring6.service.UserService">
+  <property name="userDao">
+    <ref bean="userDaoBean"/>
+  </property>
+</bean>
+```
+
+**总结：set注入的核心实现原理：通过反射机制调用set方法来给属性赋值，让两个对象之间产生关系。**
+
+
+
+##### 构造注入
+
+核心原理：通过调用构造方法来给属性赋值。
+
+```java
+<bean id="orderDaoBean" class="com.powernode.spring6.dao.OrderDao"/>
+<bean id="orderServiceBean" class="com.powernode.spring6.service.OrderService">
+  <!--第一个参数下标是0-->
+  <constructor-arg index="0" ref="orderDaoBean"/>
+  <!--第二个参数下标是1-->
+  <constructor-arg index="1" ref="userDaoBean"/>
+</bean>
+```
+
+- 不使用参数下标，使用参数的名字可以吗？
+
+  可以
+
+  如：
+
+  ```java
+  <bean id="orderDaoBean" class="com.powernode.spring6.dao.OrderDao"/>
+  
+  <bean id="orderServiceBean" class="com.powernode.spring6.service.OrderService">
+    <!--这里使用了构造方法上参数的名字-->
+    <constructor-arg name="orderDao" ref="orderDaoBean"/>
+    <constructor-arg name="userDao" ref="userDaoBean"/>
+  </bean>
+  
+  <bean id="userDaoBean" class="com.powernode.spring6.dao.UserDao"/>
+  ```
+
+- 不指定参数下标，不指定参数名字，可以吗？
+
+  可以
+
+  如：
+
+  ```java
+  <bean id="orderDaoBean" class="com.powernode.spring6.dao.OrderDao"/>
+  <bean id="orderServiceBean" class="com.powernode.spring6.service.OrderService">
+    <!--没有指定下标，也没有指定参数名字-->
+    <constructor-arg ref="orderDaoBean"/>
+    <constructor-arg ref="userDaoBean"/>
+  </bean>
+  
+  <bean id="userDaoBean" class="com.powernode.spring6.dao.UserDao"/>
+  ```
+
+- 配置文件中构造方法参数的类型顺序和构造方法参数的类型顺序不一致呢？
+
+  也是可以的
+
+  ```java
+  <bean id="orderDaoBean" class="com.powernode.spring6.dao.OrderDao"/>
+  
+  <bean id="orderServiceBean" class="com.powernode.spring6.service.OrderService">
+    <!--顺序已经和构造方法的参数顺序不同了-->
+    <constructor-arg ref="userDaoBean"/>
+    <constructor-arg ref="orderDaoBean"/>
+  </bean>
+  
+  <bean id="userDaoBean" class="com.powernode.spring6.dao.UserDao"/>
+  ```
+
+得知，通过构造方法注入的时候：
+
+- 可以通过下标
+- 可以通过参数名
+- 也可以不指定下标和参数名，可以类型自动推断。
+
+Spring在装配方面做的还是比较健壮的。
