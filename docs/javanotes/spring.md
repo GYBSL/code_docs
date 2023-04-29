@@ -730,7 +730,7 @@ property标签的name是：setUserDao()方法名演变得到的。演变的规�
 
   也是可以的
 
-  ```java
+  ```xml
   <bean id="orderDaoBean" class="com.powernode.spring6.dao.OrderDao"/>
   
   <bean id="orderServiceBean" class="com.powernode.spring6.service.OrderService">
@@ -749,3 +749,327 @@ property标签的name是：setUserDao()方法名演变得到的。演变的规�
 - 也可以不指定下标和参数名，可以类型自动推断。
 
 Spring在装配方面做的还是比较健壮的。
+
+
+
+##### set注入专题
+
+###### 注入外部Bean
+
+```xml
+<bean id="userDaoBean" class="com.powernode.spring6.dao.UserDao"/>
+
+<bean id="userServiceBean" class="com.powernode.spring6.service.UserService">
+    // 通过ref引入的就是外部注入
+	<property name="userDao" ref="userDaoBean"/>
+</bean>
+```
+
+###### 注入内部Bean
+
+在bean标签中嵌套bean标签
+
+```xml
+<bean id="userServiceBean" class="com.powernode.spring6.service.UserService">
+    <property name="userDao">
+    	<bean class="com.powernode.spring6.dao.UserDao"/>
+	</property>
+</bean>
+```
+
+###### 注入简单类型
+
+需要特别注意：如果给简单类型赋值，使用value属性或value标签。而不是ref
+
+```xml
+<bean id="userBean" class="com.powernode.spring6.beans.User">
+    <!--如果像这种int类型的属性，我们称为简单类型，这种简单类型在注入的时候要使用value属性，不能使用ref-->
+    <!--<property name="age" value="20"/>-->
+    <property name="age">
+        <value>20</value>
+    </property>
+</bean>
+
+或者使用value属性
+
+<bean id="outB" class="com.gybsl.bean.outBean">
+    <property name="age" value="23"></property>
+</bean>
+```
+
+- 什么是简单类型
+
+  ```java
+  // BeanUtils
+  
+  public static boolean isSimpleValueType(Class<?> type) {
+      return (Void.class != type && void.class != type &&
+              (ClassUtils.isPrimitiveOrWrapper(type) ||
+               Enum.class.isAssignableFrom(type) ||
+               CharSequence.class.isAssignableFrom(type) ||
+               Number.class.isAssignableFrom(type) ||
+               Date.class.isAssignableFrom(type) ||
+               Temporal.class.isAssignableFrom(type) ||
+               URI.class == type ||
+               URL.class == type ||
+               Locale.class == type ||
+               Class.class == type));
+  }
+  ```
+
+  **通过源码分析得知，简单类型包括：**
+
+  - **基本数据类型**
+  - **基本数据类型对应的包装类**
+  - **String或其他的CharSequence子类**
+  - **Number子类**
+  - **Date子类**
+  - **Enum子类**
+  - **URI**
+  - **URL**
+  - **Temporal子类**
+  - **Locale**
+  - **Class**
+  - **另外还包括以上简单值类型对应的数组类型。**
+
+  
+
+  **注意: **
+
+  ```xml
+  <!--注意：value后面的日期字符串格式不能随便写，必须是Date对象toString()方法执行的结果。-->
+  <!--如果想使用其他格式的日期字符串，就需要进行特殊处理了。-->
+  <property name="date" value="Fri Sep 30 15:26:38 CST 2022"/>
+  ```
+
+  **需要注意的是：**
+
+  - **如果把Date当做简单类型的话，日期字符串格式不能随便写。格式必须符合Date的toString()方法格式。显然这就比较鸡肋了。如果我们提供一个这样的日期字符串：2010-10-11，在这里是无法赋值给Date类型的属性的。**
+  - **spring6之后，当注入的是URL，那么这个url字符串是会进行有效性检测的。如果是一个存在的url，那就没问题。如果不存在则报错。**
+
+###### 级联属性赋值（了解）
+
+**要点：**
+
+- **在spring配置文件中，如上，注意顺序。**
+- **在spring配置文件中，clazz属性必须提供getter方法。**
+
+就是一个类如果有一个引用类型的成员，可以通过级联的赋值方法给引用类型的成员里面的成员赋值
+
+```xml
+<bean id="clazzBean" class="com.powernode.spring6.beans.Clazz"/>
+
+<bean id="student" class="com.powernode.spring6.beans.Student">
+    <property name="name" value="张三"/>
+
+    <!--要点1：以下两行配置的顺序不能颠倒-->
+    <property name="clazz" ref="clazzBean"/>
+    <!--要点2：clazz属性必须有getter方法-->
+    <property name="clazz.name" value="高三一班"/>
+</bean>
+```
+
+###### 注入数组
+
+```xml
+当数组中是简单类型时用如下方式：
+
+<bean id="person" class="com.powernode.spring6.beans.Person">
+        <property name="favariteFoods">
+            <array>
+                <value>鸡排</value>
+                <value>汉堡</value>
+                <value>鹅肝</value>
+            </array>
+        </property>
+</bean>
+
+
+当数组中不是简单类型时，如下：
+
+<bean id="order" class="com.powernode.spring6.beans.Order">
+    <property name="goods">
+        <array>
+            <!--这里使用ref标签即可-->
+            <ref bean="goods1"/>
+            <ref bean="goods2"/>
+        </array>
+    </property>
+</bean>
+
+<bean id="goods1" class="com.powernode.spring6.beans.Goods">
+    <property name="name" value="西瓜"/>
+</bean>
+
+<bean id="goods2" class="com.powernode.spring6.beans.Goods">
+    <property name="name" value="苹果"/>
+</bean>
+```
+
+###### 注入List集合
+
+List集合：有序可重复
+
+**注意：注入List集合的时候使用list标签，如果List集合中是简单类型使用value标签，反之使用ref标签**
+
+```xml
+<bean id="peopleBean" class="com.powernode.spring6.beans.People">
+    <property name="names">
+        <list>
+            <value>铁锤</value>
+            <value>张三</value>
+            <value>张三</value>
+            <value>张三</value>
+            <value>狼</value>
+        </list>
+    </property>
+</bean>
+```
+
+###### 注入Set集合
+
+Set集合：无序不可重复
+
+如果有重复值则会自动去重
+
+```xml
+<bean id="peopleBean" class="com.powernode.spring6.beans.People">
+    <property name="phones">
+        <set>
+            <!--非简单类型可以使用ref，简单类型使用value-->
+            <value>110</value>
+            <value>110</value>
+            <value>120</value>
+            <value>120</value>
+            <value>119</value>
+            <value>119</value>
+        </set>
+    </property>
+</bean>
+```
+
+**要点：**
+
+- **使用`<set>`标签**
+- **set集合中元素是简单类型的使用value标签，反之使用ref标签。**
+
+###### 注入Map集合
+
+```xml
+<bean id="peopleBean" class="com.powernode.spring6.beans.People">
+    <property name="addrs">
+        <map>
+            <!--如果key不是简单类型，使用 key-ref 属性-->
+            <!--如果value不是简单类型，使用 value-ref 属性-->
+            <entry key="1" value="北京大兴区"/>
+            <entry key="2" value="上海浦东区"/>
+            <entry key="3" value="深圳宝安区"/>
+        </map>
+    </property>
+</bean>
+```
+
+**要点：**
+
+- **使用`<map>`标签**
+- **如果key是简单类型，使用 key 属性，反之使用 key-ref 属性。**
+- **如果value是简单类型，使用 value 属性，反之使用 value-ref 属性。**
+
+###### 注入Properties
+
+```xml
+<bean id="peopleBean" class="com.powernode.spring6.beans.People">
+    <property name="properties">
+        <props>
+            <prop key="driver">com.mysql.cj.jdbc.Driver</prop>
+            <prop key="url">jdbc:mysql://localhost:3306/spring</prop>
+            <prop key="username">root</prop>
+            <prop key="password">123456</prop>
+        </props>
+    </property>
+</bean>
+```
+
+**要点：**
+
+- **使用`<props>`标签嵌套`<prop>`标签完成。**
+
+###### 注入null和空字符串
+
+注入空字符串使用：`<value/>` 或者 value=""
+
+注入null使用：`<null/>` 或者 不为该属性赋值
+
+```xml
+注入空字符串
+
+<bean id="vipBean" class="com.powernode.spring6.beans.Vip">
+    <!--空串的第一种方式-->
+    <!--<property name="email" value=""/>-->
+    <!--空串的第二种方式-->
+    <property name="email">
+        <value/>
+    </property>
+</bean>
+```
+
+```xml
+注入null
+
+不给属性赋值
+<bean id="vipBean" class="com.powernode.spring6.beans.Vip" />
+
+或使用<null/>
+<bean id="vipBean" class="com.powernode.spring6.beans.Vip">
+    <property name="email">
+        <null/>
+    </property>
+</bean>
+```
+
+###### 注入的值中含有特殊符号
+
+XML中有5个特殊字符，分别是：`<、>、'、"、&`
+
+以上5个特殊符号在XML中会被特殊对待，会被当做XML语法的一部分进行解析，如果这些特殊符号直接出现在注入的字符串当中，会报错。
+
+解决方案包括两种：
+
+- 第一种：特殊符号使用转义字符代替。
+- 第二种：将含有特殊符号的字符串放到：<![CDATA[]]> 当中。因为放在CDATA区中的数据不会被XML文件解析器解析。
+
+5个特殊字符对应的转义字符分别是：
+
+| **特殊字符** | **转义字符** |
+| ------------ | ------------ |
+| >            | &gt;         |
+| <            | &lt;         |
+| '            | &apos;       |
+| "            | &quot;       |
+| &            | &amp;        |
+
+先使用转义字符来代替：
+
+如：
+
+```xml
+<bean id="mathBean" class="com.powernode.spring6.beans.Math">
+    <property name="result" value="2 &lt; 3"/>
+</bean>
+```
+
+我们再来使用CDATA方式：
+
+`<![CDATA[2 < 3]]>`标签中的东西会被自动解析成字符串，不会校验里面的特殊符号
+
+```xml
+<bean id="mathBean" class="com.powernode.spring6.beans.Math">
+    <property name="result">
+        <!--只能使用value标签-->
+        <value><![CDATA[2 < 3]]></value>
+    </property>
+</bean>
+```
+
+**注意：使用CDATA时，不能使用value属性，只能使用value标签。**
+
