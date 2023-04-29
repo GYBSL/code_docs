@@ -1,6 +1,7 @@
 ---
 title: Vant实现屏幕适配
 order: 1
+toc: content
 nav:
   title: 开发总结
   order: 4
@@ -9,7 +10,7 @@ group:
   order: 1
 ---
 
-**Vant 实现屏幕适配**
+# Vant 实现屏幕适配
 
 自动让所有 px 转成 rem ( 以后我们可以直接写px ) 
 

@@ -1,6 +1,7 @@
 ---
 title: Vue响应式原理
 order: 2
+toc: content
 group: 
   title: 开发总结
   order: 2

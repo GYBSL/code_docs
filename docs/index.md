@@ -12,13 +12,19 @@ hero:
 features:
   - title: Java后端
     emoji: 🚥
-    description: Java后端学习笔记，java基础 + java web
+    description: Java后端学习笔记，java基础 + java web + Spring
   - title: 前端开发
     emoji: 🌈
     description: 前端学习笔记
   - title: '开发总结'
     emoji: 🚀
     description: 开发中遇到的问题总结和面试总结
+  - title: 'Git的使用'
+    emoji: 💡
+    description: Git是实际开发中必用的工具，快来学习入门吧！
 ---
 
+
+:::info{title=志在必行}
 少年,今天的代码写了吗🤪！
+:::

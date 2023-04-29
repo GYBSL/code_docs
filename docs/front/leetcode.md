@@ -1,6 +1,7 @@
 ---
 title: 力扣算法刷题
 order: 1
+toc: content
 nav:
   title: 前端
   order: 2

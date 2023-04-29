@@ -1,8 +1,9 @@
 ---
-title: Java Web笔记
+title: Java Web
 order: 2
+toc: content
 group: 
-  title: Java后端
+  title: Java
   order: 2
 ---
 
