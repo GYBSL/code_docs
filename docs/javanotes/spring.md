@@ -1074,3 +1074,437 @@ XML中有5个特殊字符，分别是：`<、>、'、"、&`
 
 **注意：使用CDATA时，不能使用value属性，只能使用value标签。**
 
+
+
+##### p命名空间注入
+
+使用p命名空间注入的前提条件包括两个
+
+- 第一：在XML头部信息中添加p命名空间的配置信息：`xmlns:p="http://www.springframework.org/schema/p"`
+- 第二：p命名空间注入是基于setter方法的，所以需要对应的属性提供setter方法。
+
+如：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="customerBean" class="com.powernode.spring6.beans.Customer" p:name="zhangsan" p:age="20"/>
+
+</beans>
+```
+
+非简单类型：
+
+​	`p:birth-ref="bean的ID"`
+
+所以p命名空间实际上是对set注入的简化。
+
+
+
+##### c命名空间注入
+
+是对构造方法注入的简化
+
+c命名空间是简化构造方法注入的。
+
+使用c命名空间的两个前提条件：
+
+第一：需要在xml配置文件头部添加信息：`xmlns:c="http://www.springframework.org/schema/c"`
+
+第二：需要提供构造方法。
+
+如：
+
+```java
+// javabean中提供对应的构造方法
+
+public MyTime(int year, int month, int day) {
+    this.year = year;
+    this.month = month;
+    this.day = day;
+}
+```
+
+```xml
+<!-- xml中 -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--<bean id="myTimeBean" class="com.powernode.spring6.beans.MyTime" c:year="1970" c:month="1" c:day="1"/>-->
+	
+    <!-- 通过c:参数名或者c:_0来注入 -->
+    <bean id="myTimeBean" class="com.powernode.spring6.beans.MyTime" c:_0="2008" c:_1="8" c:_2="8"/>
+
+</beans>
+```
+
+所以，c命名空间是依靠构造方法的。
+
+注意：不管是p命名空间还是c命名空间，注入的时候都可以注入简单类型以及非简单类型。
+
+
+
+##### util命名空间
+
+主要是对于集合。
+
+底层调用的是set方法
+
+使用util命名空间可以让**配置复用**。
+
+使用util命名空间的前提是：在spring配置文件头部添加配置信息。如下：
+
+- xsd文件其实就是schemal文件，用来约束此配置文件中可以写什么标签
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <util:properties id="prop">
+        <prop key="driver">com.mysql.cj.jdbc.Driver</prop>
+        <prop key="url">jdbc:mysql://localhost:3306/spring</prop>
+        <prop key="username">root</prop>
+        <prop key="password">123456</prop>
+    </util:properties>
+
+    <bean id="dataSource1" class="com.powernode.spring6.beans.MyDataSource1">
+        <property name="properties" ref="prop"/>
+    </bean>
+
+    <bean id="dataSource2" class="com.powernode.spring6.beans.MyDataSource2">
+        <property name="properties" ref="prop"/>
+    </bean>
+</beans>
+```
+
+```java
+// javabean中
+
+public class MyDataSource1 {
+    private Properties properties;
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    public String toString() {
+        return "MyDataSource1{" +
+            "properties=" + properties +
+            '}';
+    }
+}
+```
+
+
+
+##### 基于XML的自动装配
+
+Spring 还可以完成自动化的注入，自动化注入又被称为自动装配。它可以根据**名字**进行自动装配，也可以根据**类型**进行自动装配。
+
+###### 根据名称自动装配
+
+如：
+
+```java
+// UserDao.java
+
+public class UserDao {
+    public void insert(){
+        System.out.println("正在保存用户数据。");
+    }
+}
+```
+
+```java
+// UserService.java
+
+public class UserService {
+
+    private UserDao aaa;
+
+    // 这个set方法非常关键
+    public void setAaa(UserDao aaa) {
+        this.aaa = aaa;
+    }
+
+    public void save(){
+        aaa.insert();
+    }
+}
+```
+
+```xml
+<!--xml-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="userService" class="com.powernode.spring6.service.UserService" autowire="byName"/>
+
+    <bean id="aaa" class="com.powernode.spring6.dao.UserDao"/>
+
+</beans>
+```
+
+这个配置起到关键作用：
+
+- `UserService Bean`中需要添加`autowire="byName"`，表示通过名称进行装配。
+- `UserService`类中有一个UserDao属性，而`UserDao`属性的名字是aaa，**对应的set方法是`setAaa()`**，正好和`UserDao Bean`的id是一样的。这就是根据名称自动装配。
+
+**如果根据名称装配(byName)，底层会调用set方法进行注入。**
+
+例如：setAge() 对应的名字是age，setPassword()对应的名字是password，setEmail()对应的名字是email。
+
+
+
+###### 根据类型自动装配
+
+如：
+
+```xml
+<!--xml-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--byType表示根据类型自动装配-->
+    <bean id="accountService" class="com.powernode.spring6.service.AccountService" autowire="byType"/>
+
+    <bean class="com.powernode.spring6.dao.AccountDao"/>
+
+</beans>
+```
+
+无论是`byName`还是`byType`，在装配的时候都是基于set方法的。所以set方法是必须要提供的。提供构造方法是不行的，大家可以测试一下。这里就不再赘述。
+
+如果byType，根据类型装配时，如果配置文件中有两个类型一样的bean会出现什么问题呢？
+
+如：
+
+```xml
+会报错
+
+<bean id="accountService" class="com.powernode.spring6.service.AccountService" autowire="byType"/>
+
+<bean id="x" class="com.powernode.spring6.dao.AccountDao"/>
+<bean id="y" class="com.powernode.spring6.dao.AccountDao"/>
+```
+
+当byType进行自动装配的时候，配置文件中某种类型的Bean必须是唯一的，不能出现多个。
+
+
+
+##### Spring引入外部属性配置文件
+
+我们都知道编写数据源的时候是需要连接数据库的信息的，例如：driver url username password等信息。这些信息可以单独写到一个属性配置文件中吗，这样用户修改起来会更加的方便。当然可以。
+
+第一步：写一个数据源类，提供相关属性。
+
+```java
+package com.powernode.spring6.beans;
+
+import javax.sql.DataSource;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
+
+public class MyDataSource implements DataSource {
+    @Override
+    public String toString() {
+        return "MyDataSource{" +
+                "driver='" + driver + '\'' +
+                ", url='" + url + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+
+    private String driver;
+    private String url;
+    private String username;
+    private String password;
+
+    public void setDriver(String driver) {
+        this.driver = driver;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    //......
+}
+```
+
+第二步：在类路径下新建`jdbc.properties`文件，并配置信息。
+
+```properties
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/spring
+username=root
+password=root123
+```
+
+第三步：在spring配置文件中引入context命名空间。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+</beans>
+```
+
+第四步：在spring中配置使用jdbc.properties文件。
+
+使用：`<context:property-placeholder location="jdbc.properties"/>`
+
+取值：`${key}`
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="jdbc.properties"/>
+    
+    <bean id="dataSource" class="com.powernode.spring6.beans.MyDataSource">
+        <property name="driver" value="${driver}"/>
+        <property name="url" value="${url}"/>
+        <property name="username" value="${username}"/>
+        <property name="password" value="${password}"/>
+    </bean>
+</beans>
+```
+
+
+
+
+
+### Bean的作用域
+
+#### singleton
+
+默认情况下，Spring的IoC容器创建的Bean对象是单例的
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="sb" class="com.powernode.spring6.beans.SpringBean" />
+
+</beans>
+```
+
+默认情况下，Bean对象的创建是在初始化Spring上下文的时候就完成的
+
+就是在执行`ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring-scope.xml");`这段代码的时候就已经创建了一个对象了
+
+#### prototype
+
+如果想让Spring的Bean对象以多例的形式存在，可以在bean标签中指定scope属性的值为：**prototype**，这样Spring会在每一次执行`getBean()`方法的时候创建Bean对象，调用几次则创建几次。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="sb" class="com.powernode.spring6.beans.SpringBean" scope="prototype" />
+
+</beans>
+```
+
+```java
+@Test
+public void testScope(){
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring-scope.xml");
+
+    SpringBean sb1 = applicationContext.getBean("sb", SpringBean.class);
+    System.out.println(sb1);
+
+    SpringBean sb2 = applicationContext.getBean("sb", SpringBean.class);
+    System.out.println(sb2);
+}
+
+会输出不同的对象
+```
+
+scope如果没有配置，它的默认值是什么呢？默认值是singleton，单例的
+
+#### 其它scope
+
+scope属性的值不止两个，它一共包括8个选项：
+
+- singleton：默认的，单例。
+- prototype：原型。每调用一次getBean()方法则获取一个新的Bean对象。或每次注入的时候都是新对象。
+- request：一个请求对应一个Bean。**仅限于在WEB应用中使用**。
+- session：一个会话对应一个Bean。**仅限于在WEB应用中使用**。
+- global session：**portlet应用中专用的**。如果在Servlet的WEB应用中使用global session的话，和session一个效果。（portlet和servlet都是规范。servlet运行在servlet容器中，例如Tomcat。portlet运行在portlet容器中。）
+- application：一个应用对应一个Bean。**仅限于在WEB应用中使用。**
+- websocket：一个websocket生命周期对应一个Bean。**仅限于在WEB应用中使用。**
+- 自定义scope：很少使用。
+
+
+
+接下来咱们自定义一个Scope，线程级别的Scope，在同一个线程中，获取的Bean都是同一个。跨线程则是不同的对象：（以下内容作为了解）
+
+- 第一步：自定义Scope。（实现Scope接口）
+
+- - spring内置了线程范围的类：org.springframework.context.support.SimpleThreadScope，可以直接用。
+
+- 第二步：将自定义的Scope注册到Spring容器中。
+
+```xml
+<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+  <property name="scopes">
+    <map>
+      <entry key="myThread">
+        <bean class="org.springframework.context.support.SimpleThreadScope"/>
+      </entry>
+    </map>
+  </property>
+</bean>
+```
+
+- 第三步：使用Scope。
+
+  ```xml
+  <bean id="sb" class="com.powernode.spring6.beans.SpringBean" scope="myThread" />
+  ```
+
