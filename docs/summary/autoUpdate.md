@@ -8,6 +8,8 @@ group:
 ---
 
 
+推荐一篇不错的掘金博客 关于`Puppeteer`的 https://juejin.cn/post/6984685772632752164
+
 # 自动更新 gitee pages 脚本
 
 ## 1. 新建文件夹
