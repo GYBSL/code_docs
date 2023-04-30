@@ -1,5 +1,5 @@
 ---
-title: 编程文档1
+title: 编程文档
 keywords: [dumi,编程文档,gybsl,前端笔记,文档,笔记,基于dumi2的编程学习文档]
 hero:
   title: 编程文档
