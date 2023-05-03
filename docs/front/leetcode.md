@@ -1,13 +1,10 @@
 ---
-title: 力扣算法刷题
-order: 1
+title: 力扣算法
+order: 3
 toc: content
-nav:
-  title: 前端
-  order: 2
 group:
   title: 前端
-  order: 1
+  order: 3
 ---
 
 

@@ -1,10 +1,13 @@
 ---
 title: React 基础
-order: 2
+order: 1
 toc: content
-group: 
+nav:
   title: 前端
   order: 2
+group: 
+  title: 前端
+  order: 1
 ---
 
 ## React 简介
