@@ -25,7 +25,7 @@ $ npm run docs:build
 记得改 `.dumirc.ts` 中的配置，如下修改 `base ` 和 `publicPath`
 
 ```javascript
-base: "/", // 文档起始路由 
+base: "/", // 文档起始路由
 publicPath: "/docs-dist/" // 静态资源起始路径
 
 如果要托管到github或者gitee上的话
