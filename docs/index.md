@@ -10,15 +10,15 @@ hero:
     - text: Gitee
       link: https://gitee.com/gybsl
 features:
-  - title: Java后端
-    emoji: 🚥
-    description: Java后端学习笔记，java基础 + java web + Spring
   - title: 前端开发
     emoji: 🌈
-    description: 前端学习笔记
-  - title: '开发总结'
+    description: 小编主打前端开发 <br> 主要技术栈：Vue + 小程序👻，  跨端：Uni-app + Flutter🤖
+  - title: Java后端
+    emoji: 🚥
+    description: Java后端学习笔记 <br> 学校主修 Java😂，但 Java 只是入门水平😂，Java基础 + Java web + Spring
+  - title: '编程总结'
     emoji: 🚀
-    description: 开发中遇到的问题总结和面试总结
+    description: 总结学习和开发中遇到的问题 和 BUG🎃，聚沙成塔📢 <br> 开发中遇到的问题总结和面试总结
   - title: 'Git的使用'
     emoji: 💡
     description: Git是实际开发中必用的工具，快来学习入门吧！
