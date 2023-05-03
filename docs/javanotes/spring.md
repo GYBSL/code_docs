@@ -110,7 +110,7 @@ settings也要改为自己本地的 `maven` 下的 `conf` 文件夹下的 `setti
 
 
 
-## Spring框架
+## Spring 概述
 
 * Spring框架实现了控制反转IoC这种思想
   Spring框架可以帮你new对象。
@@ -229,7 +229,7 @@ Spring是一个开源框架，它由Rod Johnson创建。它是为了解决企业
 
 
 
-## Spring的入门程序
+## Spring入门
 
 官网地址：https://spring.io/
 
@@ -587,9 +587,9 @@ bean标签的两个重要属性:
 
 
 
-### Spring对IoC的实现
+## Spring对IoC的实现
 
-#### IoC 控制反转
+### IoC 控制反转
 
 - 控制反转是一种思想。
 - 控制反转是为了降低程序耦合度，提高程序扩展力，达到OCP原则，达到DIP原则。
@@ -602,7 +602,7 @@ bean标签的两个重要属性:
 
 - - DI（Dependency Injection）：依赖注入
 
-#### 依赖注入
+### 依赖注入
 
 依赖注入实现了控制反转的思想。
 
@@ -620,7 +620,7 @@ Bean管理说的是：Bean对象的创建，以及Bean对象中属性的赋值�
 - 第一种：set注入
 - 第二种：构造注入
 
-##### set注入
+#### set注入
 
 - 具体实现步骤可以看动力节点的文档
 
@@ -678,7 +678,7 @@ property标签的name是：setUserDao()方法名演变得到的。演变的规�
 
 
 
-##### 构造注入
+#### 构造注入
 
 核心原理：通过调用构造方法来给属性赋值。
 
@@ -753,9 +753,9 @@ Spring在装配方面做的还是比较健壮的。
 
 
 
-##### set注入专题
+### set注入专题
 
-###### 注入外部Bean
+#### 注入外部Bean
 
 ```xml
 <bean id="userDaoBean" class="com.powernode.spring6.dao.UserDao"/>
@@ -766,7 +766,7 @@ Spring在装配方面做的还是比较健壮的。
 </bean>
 ```
 
-###### 注入内部Bean
+#### 注入内部Bean
 
 在bean标签中嵌套bean标签
 
@@ -778,7 +778,7 @@ Spring在装配方面做的还是比较健壮的。
 </bean>
 ```
 
-###### 注入简单类型
+#### 注入简单类型
 
 需要特别注意：如果给简单类型赋值，使用value属性或value标签。而不是ref
 
@@ -848,7 +848,7 @@ Spring在装配方面做的还是比较健壮的。
   - **如果把Date当做简单类型的话，日期字符串格式不能随便写。格式必须符合Date的toString()方法格式。显然这就比较鸡肋了。如果我们提供一个这样的日期字符串：2010-10-11，在这里是无法赋值给Date类型的属性的。**
   - **spring6之后，当注入的是URL，那么这个url字符串是会进行有效性检测的。如果是一个存在的url，那就没问题。如果不存在则报错。**
 
-###### 级联属性赋值（了解）
+#### 级联属性赋值（了解）
 
 **要点：**
 
@@ -870,7 +870,7 @@ Spring在装配方面做的还是比较健壮的。
 </bean>
 ```
 
-###### 注入数组
+#### 注入数组
 
 ```xml
 当数组中是简单类型时用如下方式：
@@ -907,7 +907,7 @@ Spring在装配方面做的还是比较健壮的。
 </bean>
 ```
 
-###### 注入List集合
+#### 注入List集合
 
 List集合：有序可重复
 
@@ -927,7 +927,7 @@ List集合：有序可重复
 </bean>
 ```
 
-###### 注入Set集合
+#### 注入Set集合
 
 Set集合：无序不可重复
 
@@ -954,7 +954,7 @@ Set集合：无序不可重复
 - **使用`<set>`标签**
 - **set集合中元素是简单类型的使用value标签，反之使用ref标签。**
 
-###### 注入Map集合
+#### 注入Map集合
 
 ```xml
 <bean id="peopleBean" class="com.powernode.spring6.beans.People">
@@ -976,7 +976,7 @@ Set集合：无序不可重复
 - **如果key是简单类型，使用 key 属性，反之使用 key-ref 属性。**
 - **如果value是简单类型，使用 value 属性，反之使用 value-ref 属性。**
 
-###### 注入Properties
+#### 注入Properties
 
 ```xml
 <bean id="peopleBean" class="com.powernode.spring6.beans.People">
@@ -995,7 +995,7 @@ Set集合：无序不可重复
 
 - **使用`<props>`标签嵌套`<prop>`标签完成。**
 
-###### 注入null和空字符串
+#### 注入null和空字符串
 
 注入空字符串使用：`<value/>` 或者 value=""
 
@@ -1028,7 +1028,7 @@ Set集合：无序不可重复
 </bean>
 ```
 
-###### 注入的值中含有特殊符号
+#### 注入的值中含有特殊符号
 
 XML中有5个特殊字符，分别是：`<、>、'、"、&`
 
@@ -1076,7 +1076,7 @@ XML中有5个特殊字符，分别是：`<、>、'、"、&`
 
 
 
-##### p命名空间注入
+### p命名空间注入
 
 使用p命名空间注入的前提条件包括两个
 
@@ -1105,7 +1105,7 @@ XML中有5个特殊字符，分别是：`<、>、'、"、&`
 
 
 
-##### c命名空间注入
+### c命名空间注入
 
 是对构造方法注入的简化
 
@@ -1152,7 +1152,7 @@ public MyTime(int year, int month, int day) {
 
 
 
-##### util命名空间
+### util命名空间
 
 主要是对于集合。
 
@@ -1210,11 +1210,11 @@ public class MyDataSource1 {
 
 
 
-##### 基于XML的自动装配
+### 基于XML的自动装配
 
 Spring 还可以完成自动化的注入，自动化注入又被称为自动装配。它可以根据**名字**进行自动装配，也可以根据**类型**进行自动装配。
 
-###### 根据名称自动装配
+#### 根据名称自动装配
 
 如：
 
@@ -1272,7 +1272,7 @@ public class UserService {
 
 
 
-###### 根据类型自动装配
+#### 根据类型自动装配
 
 如：
 
@@ -1311,7 +1311,7 @@ public class UserService {
 
 
 
-##### Spring引入外部属性配置文件
+### Spring引入外部属性配置文件
 
 我们都知道编写数据源的时候是需要连接数据库的信息的，例如：driver url username password等信息。这些信息可以单独写到一个属性配置文件中吗，这样用户修改起来会更加的方便。当然可以。
 
@@ -1414,9 +1414,9 @@ password=root123
 
 
 
-### Bean的作用域
+## Bean的作用域
 
-#### singleton
+### singleton
 
 默认情况下，Spring的IoC容器创建的Bean对象是单例的
 
@@ -1435,7 +1435,7 @@ password=root123
 
 就是在执行`ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring-scope.xml");`这段代码的时候就已经创建了一个对象了
 
-#### prototype
+### prototype
 
 如果想让Spring的Bean对象以多例的形式存在，可以在bean标签中指定scope属性的值为：**prototype**，这样Spring会在每一次执行`getBean()`方法的时候创建Bean对象，调用几次则创建几次。
 
@@ -1467,7 +1467,7 @@ public void testScope(){
 
 scope如果没有配置，它的默认值是什么呢？默认值是singleton，单例的
 
-#### 其它scope
+### 其它scope
 
 scope属性的值不止两个，它一共包括8个选项：
 
@@ -1507,4 +1507,6 @@ scope属性的值不止两个，它一共包括8个选项：
   ```xml
   <bean id="sb" class="com.powernode.spring6.beans.SpringBean" scope="myThread" />
   ```
+
+
 
