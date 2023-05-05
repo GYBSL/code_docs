@@ -24,14 +24,13 @@ features:
     description: Git是实际开发中必用的工具，快来学习入门吧！🌝
 ---
 
-<br>
-
-Todos 列表
-
-1.  [ ]  [前端性能优化——首页资源压缩63%、白屏时间缩短86% - 掘金 (juejin.cn)](https://juejin.cn/post/7188894691356573754)
-2.  [ ] [Git - 《阮一峰 Git 教程》 - 书栈网 · BookStack](https://www.bookstack.cn/read/git-tutorial/docs-basic.md)
-3.  [ ] JavaScript 每日面试题
 
 :::info{title=志在必行🏅}
 少年,今天的代码写了吗🤪！
 :::
+
+<!-- Todos 列表
+
+1.  [ ]  [前端性能优化——首页资源压缩63%、白屏时间缩短86% - 掘金 (juejin.cn)](https://juejin.cn/post/7188894691356573754)
+2.  [ ] [Git - 《阮一峰 Git 教程》 - 书栈网 · BookStack](https://www.bookstack.cn/read/git-tutorial/docs-basic.md)
+3.  [ ] JavaScript 每日面试题 -->
