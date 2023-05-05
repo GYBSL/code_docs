@@ -13,7 +13,7 @@ export default defineConfig({
   },
   analytics: {
     // 百度统计的 key
-    baidu: 'https://hm.baidu.com/hm.js?3ea846ff08b64301f51a1bd92e3a5019',
+    baidu: '3ea846ff08b64301f51a1bd92e3a5019',
   },
   base: "/", // 文档起始路由
   publicPath: "/code_docs/" // 静态资源起始路径
