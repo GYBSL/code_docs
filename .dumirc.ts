@@ -7,7 +7,6 @@ export default defineConfig({
     logo: "/code_docs/logo.jpg",
     footer: "别看我,看代码！🫠"
   },
-  description: "编程文档,前端笔记,java笔记,编程总结,基于dumi2的编程学习文档",
   favicons: ['/code_docs/favicon.ico'],
   history: {
     type: "hash" // hash模式
