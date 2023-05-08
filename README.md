@@ -4,6 +4,8 @@
 
 dumi2：[dumi - 为组件研发而生的静态站点框架 (umijs.org)](https://d.umijs.org/)
 
+首页新增一言接口，每次刷新页面都会获取不同的格言⭐⭐⭐
+
 ## 开始
 
 ```bash
