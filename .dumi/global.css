@@ -1,5 +1,35 @@
-.markdown{
-  background-image: linear-gradient(90deg,rgba(60,10,30,.04) 3%,transparent 0),linear-gradient(1turn,rgba(60,10,30,.04) 3%,transparent 0);
+.markdown {
+  background-image: linear-gradient(90deg, rgba(60, 10, 30, 0.04) 3%, transparent 0), linear-gradient(1turn, rgba(60, 10, 30, 0.04) 3%, transparent 0);
   background-size: 20px 20px;
-  /* background-position: 50%; */
+}
+.markdown a,
+.markdown p,
+.markdown li,
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  opacity: 0.85;
+  transition: all 0.1s ease;
+}
+.markdown a:hover,
+.markdown p:hover,
+.markdown li:hover,
+.markdown h1:hover,
+.markdown h2:hover,
+.markdown h3:hover,
+.markdown h4:hover,
+.markdown h5:hover,
+.markdown h6:hover {
+  opacity: 1;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  color: #a862ea;
 }
