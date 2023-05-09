@@ -1,16 +1,13 @@
 ---
-title: Vue响应式原理
-order: 2
+title: Vue篇
 toc: content
-group: 
-  title: 编程总结
-  order: 2
 ---
 
+# 前端高频面试题 Vue 篇
 
-# Vue响应式原理
+## 1. Vue响应式原理
 
-## vue2 响应式原理
+### vue2 响应式原理
 
 > 实现原理
 
@@ -82,7 +79,7 @@ Object.keys(person).forEach(key=>{
 
 
 
-## vue3 响应式原理
+### vue3 响应式原理
 
 > 实现原理:
 

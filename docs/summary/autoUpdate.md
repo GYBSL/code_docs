@@ -1,10 +1,10 @@
 ---
 title: 自动更新gitee pages
-order: 4
+order: 3
 toc: content
 group: 
   title: 编程总结
-  order: 4
+  order: 3
 ---
 
 
