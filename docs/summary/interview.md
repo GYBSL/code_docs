@@ -1,5 +1,5 @@
 ---
-title: 高频面试题
+title: 前端高频面试题
 order: 1
 toc: content
 nav:
