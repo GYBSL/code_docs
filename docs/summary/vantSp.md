@@ -1,13 +1,10 @@
 ---
 title: Vant实现屏幕适配
-order: 1
+order: 3
 toc: content
-nav:
-  title: 编程总结
-  order: 4
 group: 
   title: 编程总结
-  order: 1
+  order: 3
 ---
 
 # Vant 实现屏幕适配
