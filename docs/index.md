@@ -1,6 +1,6 @@
 ---
 title: 编程文档
-keywords: [dumi,编程文档,gybsl,前端笔记,文档,笔记,基于dumi2的编程学习文档]
+keywords: [编程文档,code docs,gybsl,编程学习文档,前端笔记,基于dumi2]
 description: 编程文档,前端笔记,java笔记,编程总结,基于dumi2的编程学习文档
 hero:
   title: 编程文档
