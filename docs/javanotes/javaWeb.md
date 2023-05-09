@@ -11,7 +11,7 @@ group:
 
 # JAVA WEB笔记
 
-## 数据库相关概念
+## 一、数据库相关概念
 
 ### 数据库
 
@@ -643,7 +643,7 @@ DataGrip
 官网: https://www.jetbrains.com/zh-cn/datagrip
 
 
-## JDBC
+## 二、JDBC
 
 ### JDBC简介
 
@@ -1119,7 +1119,7 @@ Connection connection = dataSource.getConnection();
 
 
 
-## Maven
+## 三、Maven
 
 Maven是专门用于管理和构建Java项目的工具，它的主要功能有:
 
@@ -1406,7 +1406,7 @@ lDEA配置Maven环境
 > package: 打包
 > install: 安装
 
-## MyBatis
+## 四、MyBatis
 
 ### 什么是MyBatis?
 
@@ -2100,7 +2100,7 @@ mybatis会将数组参数,封装为一个Map集合。
 
 
 
-## Tomcat
+## 五、Tomcat
 
 ### Tomcat简介和基本使用
 
@@ -2158,7 +2158,7 @@ Tomcat是Apache软件基金会一个核心项目，是一个开源免费的轻�
 
 
 
-## Servlet
+## 六、Servlet
 
 Servlet是Java提供的一门动态web资源开发技术
 
@@ -2714,7 +2714,7 @@ IOUtils.copy(fis ,os);
 
  
 
-## JSP
+## 七、JSP
 
 ### JSP概述
 
@@ -2936,7 +2936,7 @@ step: 步长
 
 
 
-## MVC模式
+## 八、MVC模式
 
 MVC是一种分层开发的模式，其中:
 
@@ -2954,7 +2954,7 @@ MVC好处:
 
 
 
-## 三层架构
+## 九、三层架构
 
 ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/jsp9.png)
 
@@ -3144,7 +3144,7 @@ public class EmpController {
    - @Autowired是spring框架提供的注解，而@Resource是JDK提供的注解
    - @Autowired 默认是按照类型注入，而@Resource默认是按照名称注入
 
-## 会话跟踪技术
+## 十、会话跟踪技术
 
 - 会话: 用户打开浏览器，访问web服务器的资源，会话建立，直到有一方断开连接，会话结束。在一次会话中可以包含多次请求和响应
 - 会话跟踪: 一种维护浏览器状态的方法，服务器需要识别多次请求是否来自于同一浏览器，以便在同一次会话的多次请求间共享数据
@@ -3347,7 +3347,7 @@ Cookie 和 Session 都是来完成─次会话内多次请求间数据共享的
 
 
 
-## Filter
+## 十一、Filter
 
 - 概念:Filter表示过滤器，是JavaWeb三大组件(Servletu。 Filter、Listener)之一。
 - 过滤器可以把对资源的请求拦截下来，从而实现一些特殊的功能。
@@ -3436,7 +3436,7 @@ public class FilterDemo(){}
 
 
 
-## Listener
+## 十二、Listener
 
 - 概念: Listener表示监听器，是JavaWeb三大组件(Servlet、Filter、Listener)之一。
 - 监听器可以监听就是在application,session,request三个对象创建、销毁或者往其中添加修改删除属性时自动执行代码的功能组件
@@ -3485,7 +3485,7 @@ public class ContextLoaderListener implements ServletContextListener {
 
 
 
-## HTTP
+## 十三、HTTP
 
 - 概念: Hyper Text Transfer Protocol，超文本传输协议，规定了浏览器和服务器之间数据传输的规则。
 
@@ -3583,7 +3583,7 @@ public class ContextLoaderListener implements ServletContextListener {
   告诉浏览器为当前页面所在的域设置cookie。
 
 
-## Spring
+## 十四、Spring
 
 - 官网: http://spring.io
 - Spring发展到今天已经形成了一种开发生态圈，Spring提供了若干个子项目，每个项目用于完成特定的功能。
