@@ -10,7 +10,7 @@ group:
   order: 1
 ---
 
-## React 简介
+## 一、React 简介
 
 **一个专注于构建用户界面的 JavaScript 库，和 vue 和 angular 并称前端三大框架**
 
@@ -39,7 +39,7 @@ group:
    react 不仅仅可以构建 web 应用，使用 react-native 还可以构建如安卓和 ios 的原生应用，一套代码多个平台
 
 
-## React安装使用
+## 二、React安装使用
 1. CDN 引入
 
    和普通的 JS 库或框架一样，React 也可以从 CDN 引入
@@ -199,7 +199,7 @@ group:
 
 
 
-## JSX
+## 三、JSX
 
 概念：JSX是 JavaScript XML（HTML）的缩写，表示在 JS 代码中书写 HTML 结构，是一种js的语法糖
 
@@ -349,7 +349,7 @@ export default App
 
 
 
-## react组件基础
+## 四、react组件基础
 
 ### 函数组件
 
@@ -408,7 +408,7 @@ export default App
 
 
 
-## 组件的事件绑定
+## 五、组件的事件绑定
 
 ### 函数组件的事件绑定
 
@@ -479,7 +479,7 @@ class Hello extends React.Component {
 
 
 
-## 组件状态
+## 六、组件状态
 
 
 理解：组件初始化状态 ---> 视图读取渲染初始状态 ---> 状态更新 ---> 视图使用新状态自动更新
@@ -525,7 +525,7 @@ this.setState({
 
 
 
-## 表单处理 和 ref
+## 七、表单处理 和 ref
 
 ### 受控表单
 
@@ -589,7 +589,7 @@ class Hello extends React.Component {
 
 
 
-## react组件通信
+## 八、react组件通信
 
 ### react组件常见通信方式
 
@@ -741,7 +741,7 @@ export default App
 
 
 
-## react组件children和组件校验
+## 九、react组件children和组件校验
 
 ### 组件 children
 
@@ -897,7 +897,7 @@ class List extends Component {
 
 
 
-## 生命周期
+## 十、生命周期
 
 > 生命周期是组件从创建到挂载页面，到更新，到页面卸载的过程
 
@@ -1005,7 +1005,7 @@ componentWillUnmount(): 组件卸载, 执行清理工作（比如：清理定时
 
 
 
-## Hooks
+## 十一、Hooks
 
 > 一套能够使函数组件更强大，更灵活的“钩子”
 
@@ -1280,7 +1280,7 @@ export default App;
 
 
 
-## Hooks 进阶
+## 十二、Hooks 进阶
 
 ### useState - 回调函数的参数
 
@@ -1471,7 +1471,7 @@ export default App;
 
 
 
-## React-Router
+## 十三、React-Router
 
 **1、安装路由依赖**
 
@@ -1750,7 +1750,7 @@ export default App;
 
 
 
-## Mobx
+## 十四、Mobx
 
 > 一个可以和 React 良好配合的集中状态管理工具，和 Redux 解决的问题相似，都可以独立组件进行集中状态管理
 
