@@ -5,7 +5,7 @@ export default defineConfig({
   themeConfig: {
     name: '编程文档',
     logo: "/code_docs/logo.jpg",
-    footer: "别看我,看代码！🫠"
+    footer: "别看我,看代码！👀"
   },
   favicons: ['/code_docs/favicon.ico'],
   history: {
