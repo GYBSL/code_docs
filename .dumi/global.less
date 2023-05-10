@@ -1,7 +1,12 @@
+// 全局样式覆盖
+
+// 覆盖.markdown原有样式
 .markdown{
+  // 添加掘金文档中同款线条背景
   background-image: linear-gradient(90deg,rgba(60,10,30,.04) 3%,transparent 0),linear-gradient(1turn,rgba(60,10,30,.04) 3%,transparent 0);
   background-size: 20px 20px;
 
+  // 添加掘金文档中同款，鼠标滑到文本上透明度为1
   a,p,li,h1,h2,h3,h4,h5,h6{
     opacity: .85;
     transition: all .1s ease;
@@ -10,6 +15,7 @@
     }
   }
 
+  // 改标题颜色
   h1,h2,h3,h4,h5,h6{
     color: #a862ea;
   }
