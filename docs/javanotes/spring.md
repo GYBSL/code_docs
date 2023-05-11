@@ -10,7 +10,7 @@ group:
 
 # Spring笔记
 
-参考了b站动力节点spring课程的配套笔记
+学习b站动力节点spring课程的配套笔记
 
 动力节点spring笔记地址：[Spring6 (yuque.com)](https://www.yuque.com/dujubin/ltckqu/kipzgd)
 
@@ -3570,3 +3570,601 @@ public class UserTest {
 执行结果：
 
 ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-10-14.png)
+
+
+
+## 十三、手写Spring框架
+
+Spring IoC容器的实现原理：工厂模式 + 解析XML + 反射机制。
+
+我们给自己的框架起名为：myspring（我的春天）
+
+### 第一步：创建模块myspring
+
+采用Maven方式新建Module：myspring
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-1.png)
+
+打包方式采用jar，并且引入dom4j和jaxen的依赖，因为要使用它解析XML文件，还有junit依赖。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.myspringframework</groupId>
+    <artifactId>myspring</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>2.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>jaxen</groupId>
+            <artifactId>jaxen</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+### 第二步：准备好我们要管理的Bean
+
+准备好我们要管理的Bean（**这些Bean在将来开发完框架之后是要删除的**）
+
+注意包名，不要用org.myspringframework包，因为这些Bean不是框架内置的。是将来使用我们框架的程序员提供的。
+
+```java
+自己创建的Address类
+
+package com.powernode.myspring.bean;
+
+public class Address {
+    private String city;
+    private String street;
+    private String zipcode;
+
+    public Address() {
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getZipcode() {
+        return zipcode;
+    }
+
+    public void setZipcode(String zipcode) {
+        this.zipcode = zipcode;
+    }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "city='" + city + '\'' +
+                ", street='" + street + '\'' +
+                ", zipcode='" + zipcode + '\'' +
+                '}';
+    }
+}
+```
+
+```java
+自己创建的User类
+    
+package com.powernode.myspring.bean;
+
+public class User {
+    private String name;
+    private int age;
+    private Address addr;
+
+    public User() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public Address getAddr() {
+        return addr;
+    }
+
+    public void setAddr(Address addr) {
+        this.addr = addr;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", addr=" + addr +
+                '}';
+    }
+}
+```
+
+### 第三步：准备myspring.xml配置文件
+
+将来在框架开发完毕之后，这个文件也是要删除的。因为这个配置文件的提供者应该是使用这个框架的程序员。
+
+文件名随意，我们这里叫做：myspring.xml
+
+文件放在类路径当中即可，我们这里把文件放到类的根路径下。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+
+    <bean id="userBean" class="com.powernode.myspring.bean.User">
+        <property name="name" value="张三"/>
+        <property name="age" value="20"/>
+        <property name="addr" ref="addrBean"/>
+    </bean>
+    
+    <bean id="addrBean" class="com.powernode.myspring.bean.Address">
+        <property name="city" value="北京"/>
+        <property name="street" value="大兴区"/>
+        <property name="zipcode" value="1000001"/>
+    </bean>
+
+</beans>
+```
+
+使用value给简单属性赋值。使用ref给非简单属性赋值。
+
+### 第四步：编写ApplicationContext接口
+
+ApplicationContext接口中提供一个getBean()方法，通过该方法可以获取Bean对象。
+
+注意包名：这个接口就是myspring框架中的一员了。
+
+```java
+ApplicationContext接口
+    
+package org.myspringframework.core;
+
+public interface ApplicationContext {
+    /**
+     * 根据bean的id获取bean实例。
+     * @param beanId bean的id
+     * @return bean实例
+     */
+    Object getBean(String beanId);
+}
+```
+
+### 第五步：编写ClassPathXmlApplicationContext
+
+ClassPathXmlApplicationContext是ApplicationContext接口的实现类。该类从类路径当中加载myspring.xml配置文件。
+
+```java
+package org.myspringframework.core;
+
+public class ClassPathXmlApplicationContext implements ApplicationContext{
+    @Override
+    public Object getBean(String beanId) {
+        return null;
+    }
+}
+```
+
+### 第六步：确定采用Map集合存储Bean
+
+确定采用Map集合存储Bean实例。Map集合的key存储beanId，value存储Bean实例。Map<String,Object>
+
+在ClassPathXmlApplicationContext类中添加Map<String,Object>属性。
+
+并且在ClassPathXmlApplicationContext类中添加构造方法，该构造方法的参数接收myspring.xml文件。
+
+同时实现getBean方法。
+
+```java
+package org.myspringframework.core;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ClassPathXmlApplicationContext implements ApplicationContext{
+    /**
+     * 存储bean的Map集合
+     */
+    private Map<String,Object> beanMap = new HashMap<>();
+
+    /**
+     * 在该构造方法中，解析myspring.xml文件，创建所有的Bean实例，并将Bean实例存放到Map集合中。
+     * @param resource 配置文件路径（要求在类路径当中）
+     */
+    public ClassPathXmlApplicationContext(String resource) {
+
+    }
+
+    @Override
+    public Object getBean(String beanId) {
+        return beanMap.get(beanId);
+    }
+}
+```
+
+### 第七步：解析配置文件实例化所有Bean
+
+在ClassPathXmlApplicationContext的构造方法中解析配置文件，获取所有bean的类名，通过反射机制调用无参数构造方法创建Bean。并且将Bean对象存放到Map集合中。
+
+```java
+/**
+* 在该构造方法中，解析myspring.xml文件，创建所有的Bean实例，并将Bean实例存放到Map集合中。
+* @param resource 配置文件路径（要求在类路径当中）
+*/
+public ClassPathXmlApplicationContext(String resource) {
+    try {
+        SAXReader reader = new SAXReader();
+        Document document = reader.read(ClassLoader.getSystemClassLoader().getResourceAsStream(resource));
+        // 获取所有的bean标签
+        List<Node> beanNodes = document.selectNodes("//bean");
+        // 遍历集合
+        beanNodes.forEach(beanNode -> {
+            Element beanElt = (Element) beanNode;
+            // 获取id
+            String id = beanElt.attributeValue("id");
+            // 获取className
+            String className = beanElt.attributeValue("class");
+            try {
+                // 通过反射机制创建对象
+                Class<?> clazz = Class.forName(className);
+                Constructor<?> defaultConstructor = clazz.getDeclaredConstructor();
+                Object bean = defaultConstructor.newInstance();
+                // 存储到Map集合
+                beanMap.put(id, bean);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+```
+
+### 第八步：测试能否获取到Bean
+
+编写测试程序。
+
+```java
+package com.powernode.myspring.test;
+
+import org.junit.Test;
+import org.myspringframework.core.ApplicationContext;
+import org.myspringframework.core.ClassPathXmlApplicationContext;
+
+public class MySpringTest {
+    @Test
+    public void testMySpring(){
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("myspring.xml");
+        Object userBean = applicationContext.getBean("userBean");
+        Object addrBean = applicationContext.getBean("addrBean");
+        System.out.println(userBean);
+        System.out.println(addrBean);
+    }
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-2.png)
+
+通过测试Bean已经实例化成功了，属性的值是null，这是我们能够想到的，毕竟我们调用的是无参数构造方法，所以属性都是默认值。
+
+下一步就是我们应该如何给Bean的属性赋值呢？
+
+### 第九步：给Bean的属性赋值
+
+通过反射机制调用set方法，给Bean的属性赋值。
+
+继续在ClassPathXmlApplicationContext构造方法中编写代码。
+
+```java
+package org.myspringframework.core;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.Node;
+import org.dom4j.io.SAXReader;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author 动力节点
+ * @version 1.0
+ * @className ClassPathXmlApplicationContext
+ * @since 1.0
+ **/
+public class ClassPathXmlApplicationContext implements ApplicationContext{
+    /**
+     * 存储bean的Map集合
+     */
+    private Map<String,Object> beanMap = new HashMap<>();
+
+    /**
+     * 在该构造方法中，解析myspring.xml文件，创建所有的Bean实例，并将Bean实例存放到Map集合中。
+     * @param resource 配置文件路径（要求在类路径当中）
+     */
+    public ClassPathXmlApplicationContext(String resource) {
+        try {
+            SAXReader reader = new SAXReader();
+            Document document = reader.read(ClassLoader.getSystemClassLoader().getResourceAsStream(resource));
+            // 获取所有的bean标签
+            List<Node> beanNodes = document.selectNodes("//bean");
+            // 遍历集合（这里的遍历只实例化Bean，不给属性赋值。为什么要这样做？）
+            beanNodes.forEach(beanNode -> {
+                Element beanElt = (Element) beanNode;
+                // 获取id
+                String id = beanElt.attributeValue("id");
+                // 获取className
+                String className = beanElt.attributeValue("class");
+                try {
+                    // 通过反射机制创建对象
+                    Class<?> clazz = Class.forName(className);
+                    Constructor<?> defaultConstructor = clazz.getDeclaredConstructor();
+                    Object bean = defaultConstructor.newInstance();
+                    // 存储到Map集合
+                    beanMap.put(id, bean);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            // 再重新遍历集合，这次遍历是为了给Bean的所有属性赋值。
+            // 思考：为什么不在上面的循环中给Bean的属性赋值，而在这里再重新遍历一次呢？
+            // 通过这里你是否能够想到Spring是如何解决循环依赖的：实例化和属性赋值分开。
+            beanNodes.forEach(beanNode -> {
+                Element beanElt = (Element) beanNode;
+                // 获取bean的id
+                String beanId = beanElt.attributeValue("id");
+                // 获取所有property标签
+                List<Element> propertyElts = beanElt.elements("property");
+                // 遍历所有属性
+                propertyElts.forEach(propertyElt -> {
+                    try {
+                        // 获取属性名
+                        String propertyName = propertyElt.attributeValue("name");
+                        // 获取属性类型
+                        Class<?> propertyType = beanMap.get(beanId).getClass().getDeclaredField(propertyName).getType();
+                        // 获取set方法名
+                        String setMethodName = "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
+                        // 获取set方法
+                        Method setMethod = beanMap.get(beanId).getClass().getDeclaredMethod(setMethodName, propertyType);
+                        // 获取属性的值，值可能是value，也可能是ref。
+                        // 获取value
+                        String propertyValue = propertyElt.attributeValue("value");
+                        // 获取ref
+                        String propertyRef = propertyElt.attributeValue("ref");
+                        Object propertyVal = null;
+                        if (propertyValue != null) {
+                            // 该属性是简单属性
+                            String propertyTypeSimpleName = propertyType.getSimpleName();
+                            switch (propertyTypeSimpleName) {
+                                case "byte": case "Byte":
+                                    propertyVal = Byte.valueOf(propertyValue);
+                                    break;
+                                case "short": case "Short":
+                                    propertyVal = Short.valueOf(propertyValue);
+                                    break;
+                                case "int": case "Integer":
+                                    propertyVal = Integer.valueOf(propertyValue);
+                                    break;
+                                case "long": case "Long":
+                                    propertyVal = Long.valueOf(propertyValue);
+                                    break;
+                                case "float": case "Float":
+                                    propertyVal = Float.valueOf(propertyValue);
+                                    break;
+                                case "double": case "Double":
+                                    propertyVal = Double.valueOf(propertyValue);
+                                    break;
+                                case "boolean": case "Boolean":
+                                    propertyVal = Boolean.valueOf(propertyValue);
+                                    break;
+                                case "char": case "Character":
+                                    propertyVal = propertyValue.charAt(0);
+                                    break;
+                                case "String":
+                                    propertyVal = propertyValue;
+                                    break;
+                            }
+                            setMethod.invoke(beanMap.get(beanId), propertyVal);
+                        }
+                        if (propertyRef != null) {
+                            // 该属性不是简单属性
+                            setMethod.invoke(beanMap.get(beanId), beanMap.get(propertyRef));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Object getBean(String beanId) {
+        return beanMap.get(beanId);
+    }
+}
+```
+
+重点处理：当property标签中是value怎么办？是ref怎么办？
+
+执行测试程序：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-3.png)
+
+### 第十步：打包发布
+
+将多余的类以及配置文件删除，使用maven打包发布。
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-4.png)
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-5.png)
+
+### 第十一步：站在程序员角度使用myspring框架
+
+新建模块：myspring-test
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-6.png)
+
+引入myspring框架的依赖：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powernode</groupId>
+    <artifactId>myspring-test</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.myspringframework</groupId>
+            <artifactId>myspring</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+编写Bean
+
+```java
+package com.powernode.myspring.bean;
+
+public class UserDao {
+    public void insert(){
+        System.out.println("UserDao正在插入数据");
+    }
+}
+```
+
+```java
+package com.powernode.myspring.bean;
+
+public class UserService {
+    private UserDao userDao;
+
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public void save(){
+        System.out.println("UserService开始执行save操作");
+        userDao.insert();
+        System.out.println("UserService执行save操作结束");
+    }
+}
+```
+
+编写myspring.xml文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans>
+
+    <bean id="userServiceBean" class="com.powernode.myspring.bean.UserService">
+        <property name="userDao" ref="userDaoBean"/>
+    </bean>
+
+    <bean id="userDaoBean" class="com.powernode.myspring.bean.UserDao"/>
+
+</beans>
+```
+
+编写测试程序
+
+```java
+package com.powernode.myspring.test;
+
+import com.powernode.myspring.bean.UserService;
+import org.junit.Test;
+import org.myspringframework.core.ApplicationContext;
+import org.myspringframework.core.ClassPathXmlApplicationContext;
+
+public class MySpringTest {
+
+    @Test
+    public void testMySpring(){
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("myspring.xml");
+        UserService userServiceBean = (UserService) applicationContext.getBean("userServiceBean");
+        userServiceBean.save();
+    }
+}
+```
+
+执行结果:
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-11-7.png)
