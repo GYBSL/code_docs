@@ -110,3 +110,19 @@ toc: content
 
   - `500 Internal Server Error` 最常见的服务器端错误。
   - `503 Service Unavailable` 服务器端暂时无法处理请求（可能是过载或维护）。
+
+## 5. 介绍一下你对浏览器内核的理解
+
+- 主要分成两部分：渲染引擎(`layout engineer`或`Rendering Engine`)和`JS`引擎
+
+- 渲染引擎：负责取得网页的内容（`HTML`、`XML`、图像等等）、整理讯息（例如加入`CSS`等），以及计算网页的显示方式，然后会输出至显示器或打印机。浏览器的内核的不同对于网页的语法解释会有不同，所以渲染的效果也不相同。所有网页浏览器、电子邮件客户端以及其它需要编辑、显示网络内容的应用程序都需要内核
+- `JS`引擎则：解析和执行`javascript`来实现网页的动态效果
+- 最开始渲染引擎和`JS`引擎并没有区分的很明确，后来JS引擎越来越独立，内核就倾向于只指渲染引擎
+
+### 5.1 常见的浏览器内核有哪些
+
+- `Trident`内核：`IE,MaxThon,TT,The World,360`,搜狗浏览器等。[又称MSHTML]
+- `Gecko`内核：`Netscape6`及以上版本，`FF,MozillaSuite/SeaMonkey`等
+- `Presto`内核：`Opera7`及以上。 [`Opera`内核原为：Presto，现为：`Blink`;]
+- `Webkit`内核：`Safari,Chrome`等。 [ `Chrome`的`Blink`（`WebKit`的分支）]
+
