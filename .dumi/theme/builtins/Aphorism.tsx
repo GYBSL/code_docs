@@ -1,10 +1,13 @@
 /*
 * 格言组件
-* 导入 axios 调 "青柠起始页的一言" 接口
+* 导入 axios 调接口
+* 导入 apiURL 枚举
 */
 
 import React,{ useState, useEffect } from 'react';
 import axios from "axios"
+import apiURL from '../apiUrl/index';
+
 
 // 自定义样式
 const myStyle={
@@ -20,11 +23,11 @@ function Aphorism() {
     const fetchData = async () =>{
       await axios({
         method: "get",
-        url: "https://v1.hitokoto.cn/?c=i&encode=json"
+        url: apiURL.XCAPI
       }).then(res=>{
         if(res.status==200){
           if(res.data){
-            setData(res.data);
+            setData(res.data.data);
           }
         }
       })
@@ -36,8 +39,8 @@ function Aphorism() {
   return (
       <div className="Aphorism">
         <div>
-          <p >「 {  data != null ? data.hitokoto ? data.hitokoto : null : null }」</p>
-          <p style={myStyle.two}><span>——</span> { data != null ? data.from ? data.from : null : null}</p>
+          <p >「 {  data != null ? data.sentence ? data.sentence : null : null }」</p>
+          <p style={myStyle.two}><span>——</span> {data != null ? data.fromWho ? data.fromWho : null : null} { data != null ? data.from ? "《"+ data.from +"》" : null : null }</p>
         </div>
       </div>
   )
