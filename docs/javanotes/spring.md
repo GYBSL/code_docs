@@ -5518,3 +5518,553 @@ public void testNoXml(){
 
 
 
+## 十五、JdbcTemplate
+
+JdbcTemplate是Spring提供的一个JDBC模板类，是对JDBC的封装，简化JDBC代码。
+
+当然，你也可以不用，可以让Spring集成其它的ORM框架，例如：MyBatis、Hibernate等。
+
+接下来我们简单来学习一下，使用JdbcTemplate完成增删改查。
+
+### 环境准备
+
+数据库表：t_user
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-1.png)
+
+IDEA中新建模块：spring6-007-jdbc
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-2.png)
+
+引入相关依赖：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powernode</groupId>
+    <artifactId>spring6-007-jdbc</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <repositories>
+        <repository>
+            <id>repository.spring.milestone</id>
+            <name>Spring Milestone Repository</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!--新增的依赖:mysql驱动-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.30</version>
+        </dependency>
+        <!--新增的依赖：spring jdbc，这个依赖中有JdbcTemplate-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+准备实体类：表t_user对应的实体类User。
+
+```java
+package com.powernode.spring6.bean;
+
+public class User {
+    private Integer id;
+    private String realName;
+    private Integer age;
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", realName='" + realName + '\'' +
+                ", age=" + age +
+                '}';
+    }
+
+    public User() {
+    }
+
+    public User(Integer id, String realName, Integer age) {
+        this.id = id;
+        this.realName = realName;
+        this.age = age;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+}
+```
+
+编写Spring配置文件：
+
+JdbcTemplate是Spring提供好的类，这类的完整类名是：org.springframework.jdbc.core.JdbcTemplate
+
+我们怎么使用这个类呢？new对象就可以了。怎么new对象，Spring最在行了。直接将这个类配置到Spring配置文件中，纳入Bean管理即可。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate"></bean>
+</beans>
+```
+
+我们来看一下这个JdbcTemplate源码：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-3.png)
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-4.png)
+
+可以看到JdbcTemplate中有一个DataSource属性，这个属性是数据源，我们都知道连接数据库需要Connection对象，而生成Connection对象是数据源负责的。所以我们需要给JdbcTemplate设置数据源属性。
+
+所有的数据源都是要实现javax.sql.DataSource接口的。这个数据源可以自己写一个，也可以用写好的，比如：阿里巴巴的德鲁伊连接池，c3p0，dbcp等。我们这里自己先手写一个数据源。
+
+```java
+自己写的数据源
+    
+    
+package com.powernode.spring6.jdbc;
+
+import javax.sql.DataSource;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
+
+public class MyDataSource implements DataSource {
+    // 添加4个属性
+    private String driver;
+    private String url;
+    private String username;
+    private String password;
+
+    // 提供4个setter方法
+    public void setDriver(String driver) {
+        this.driver = driver;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    // 重点写怎么获取Connection对象就行。其他方法不用管。
+    @Override
+    public Connection getConnection() throws SQLException {
+        try {
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, username, password);
+            return conn;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Connection getConnection(String username, String password) throws SQLException {
+        return null;
+    }
+
+    @Override
+    public PrintWriter getLogWriter() throws SQLException {
+        return null;
+    }
+
+    @Override
+    public void setLogWriter(PrintWriter out) throws SQLException {
+
+    }
+
+    @Override
+    public void setLoginTimeout(int seconds) throws SQLException {
+
+    }
+
+    @Override
+    public int getLoginTimeout() throws SQLException {
+        return 0;
+    }
+
+    @Override
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return null;
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        return null;
+    }
+
+    @Override
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return false;
+    }
+}
+```
+
+写完数据源，我们需要把这个数据源传递给JdbcTemplate。因为JdbcTemplate中有一个DataSource属性：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="myDataSource" class="com.powernode.spring6.jdbc.MyDataSource">
+        <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring6"/>
+        <property name="username" value="root"/>
+        <property name="password" value="123456"/>
+    </bean>
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="myDataSource"/>
+    </bean>
+</beans>
+```
+
+到这里环境就准备好了。
+
+### 新增
+
+编写测试程序：
+
+```java
+package com.powernode.spring6.test;
+
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+public class JdbcTest {
+    @Test
+    public void testInsert(){
+        // 获取JdbcTemplate对象
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+        JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+        // 执行插入操作
+        // 注意：insert delete update的sql语句，都是执行update方法。
+        String sql = "insert into t_user(id,real_name,age) values(?,?,?)";
+        int count = jdbcTemplate.update(sql, null, "张三", 30);
+        System.out.println("插入的记录条数：" + count);
+    }
+}
+```
+
+update方法有两个参数：
+
+- 第一个参数：要执行的SQL语句。（SQL语句中可能会有占位符 ? ）
+- 第二个参数：可变长参数，参数的个数可以是0个，也可以是多个。一般是SQL语句中有几个问号，则对应几个参数。
+
+### 修改
+
+```java
+@Test
+public void testUpdate(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 执行更新操作
+    String sql = "update t_user set real_name = ?, age = ? where id = ?";
+    int count = jdbcTemplate.update(sql, "张三丰", 55, 1);
+    System.out.println("更新的记录条数：" + count);
+}
+```
+
+### 删除
+
+```java
+@Test
+public void testDelete(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 执行delete
+    String sql = "delete from t_user where id = ?";
+    int count = jdbcTemplate.update(sql, 1);
+    System.out.println("删除了几条记录：" + count);
+}
+```
+
+### 查询一个对象
+
+```java
+@Test
+public void testSelectOne(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 执行select
+    String sql = "select id, real_name, age from t_user where id = ?";
+    User user = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), 2);
+    System.out.println(user);
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-5.png)
+
+queryForObject方法三个参数：
+
+- 第一个参数：sql语句
+- 第二个参数：Bean属性值和数据库记录行的映射对象。在构造方法中指定映射的对象类型。
+- 第三个参数：可变长参数，给sql语句的占位符问号传值。
+
+### 查询多个对象
+
+```java
+@Test
+public void testSelectAll(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 执行select
+    String sql = "select id, real_name, age from t_user";
+    List<User> users = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(User.class));
+    System.out.println(users);
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-6.png)
+
+### 查询一个值
+
+```java
+@Test
+public void testSelectOneValue(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 执行select
+    String sql = "select count(1) from t_user";
+    Integer count = jdbcTemplate.queryForObject(sql, int.class); // 这里用Integer.class也可以
+    System.out.println("总记录条数：" + count);
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-7.png)
+
+### 批量添加
+
+```java
+@Test
+public void testAddBatch(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 批量添加
+    String sql = "insert into t_user(id,real_name,age) values(?,?,?)";
+
+    Object[] objs1 = {null, "小花", 20};
+    Object[] objs2 = {null, "小明", 21};
+    Object[] objs3 = {null, "小刚", 22};
+    List<Object[]> list = new ArrayList<>();
+    list.add(objs1);
+    list.add(objs2);
+    list.add(objs3);
+
+    int[] count = jdbcTemplate.batchUpdate(sql, list);
+    System.out.println(Arrays.toString(count));
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-8.png)
+
+### 批量修改
+
+```java
+@Test
+public void testUpdateBatch(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 批量修改
+    String sql = "update t_user set real_name = ?, age = ? where id = ?";
+    Object[] objs1 = {"小花11", 10, 2};
+    Object[] objs2 = {"小明22", 12, 3};
+    Object[] objs3 = {"小刚33", 9, 4};
+    List<Object[]> list = new ArrayList<>();
+    list.add(objs1);
+    list.add(objs2);
+    list.add(objs3);
+
+    int[] count = jdbcTemplate.batchUpdate(sql, list);
+    System.out.println(Arrays.toString(count));
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-9.png)
+
+### 批量删除
+
+```java
+@Test
+public void testDeleteBatch(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    // 批量删除
+    String sql = "delete from t_user where id = ?";
+    Object[] objs1 = {2};
+    Object[] objs2 = {3};
+    Object[] objs3 = {4};
+    List<Object[]> list = new ArrayList<>();
+    list.add(objs1);
+    list.add(objs2);
+    list.add(objs3);
+    int[] count = jdbcTemplate.batchUpdate(sql, list);
+    System.out.println(Arrays.toString(count));
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-9.png)
+
+### 使用回调函数
+
+使用回调函数，可以参与的更加细节：
+
+```java
+@Test
+public void testCallback(){
+    // 获取JdbcTemplate对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    JdbcTemplate jdbcTemplate = applicationContext.getBean("jdbcTemplate", JdbcTemplate.class);
+    String sql = "select id, real_name, age from t_user where id = ?";
+
+    User user = jdbcTemplate.execute(sql, new PreparedStatementCallback<User>() {
+        @Override
+        public User doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+            User user = null;
+            ps.setInt(1, 5);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                user = new User();
+                user.setId(rs.getInt("id"));
+                user.setRealName(rs.getString("real_name"));
+                user.setAge(rs.getInt("age"));
+            }
+            return user;
+        }
+    });
+    System.out.println(user);
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-11.png)
+
+### 使用德鲁伊连接池
+
+之前数据源是用我们自己写的。也可以使用别人写好的。例如比较牛的德鲁伊连接池。
+
+第一步：引入德鲁伊连接池的依赖。（毕竟是别人写的）
+
+```xml
+<dependency>
+  <groupId>com.alibaba</groupId>
+  <artifactId>druid</artifactId>
+  <version>1.1.8</version>
+</dependency>
+```
+
+第二步：将德鲁伊中的数据源配置到spring配置文件中。和配置我们自己写的一样。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="druidDataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring6"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="druidDataSource"/>
+    </bean>
+</beans>
+```
+
+测试结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-13-12.png)
+
+## 十六、GoF之代理模式
+
