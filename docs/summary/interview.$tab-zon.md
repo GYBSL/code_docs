@@ -126,3 +126,93 @@ toc: content
 - `Presto`内核：`Opera7`及以上。 [`Opera`内核原为：Presto，现为：`Blink`;]
 - `Webkit`内核：`Safari,Chrome`等。 [ `Chrome`的`Blink`（`WebKit`的分支）]
 
+## 6. 请描述一下 `cookies`，`sessionStorage` 和 `localStorage` 的区别？
+
+- `cookie`是网站为了标示用户身份而储存在用户本地终端（Client Side）上的数据（通常经过加密）
+- cookie数据始终在同源的http请求中携带（即使不需要），记会在浏览器和服务器间来回传递
+- `sessionStorage`和`localStorage`不会自动把数据发给服务器，仅在本地保存
+- 存储大小：
+  - `cookie`数据大小不能超过4k
+  - `sessionStorage`和`localStorage`虽然也有存储大小的限制，但比`cookie`大得多，可以达到5M或更大
+- 有期时间：
+  - `localStorage` 存储持久数据，浏览器关闭后数据不丢失除非主动删除数据
+  - `sessionStorage` 数据在当前浏览器窗口关闭后自动删除
+  - `cookie` 设置的`cookie`过期时间之前一直有效，即使窗口或浏览器关闭
+
+## 7. HTTP-报文结构
+
+### 7.1 HTTP request 报文（请求报文）结构是怎样的
+
+- 请求行：由三部分组成，请求方法、请求URL（不包括域名）、HTTP协议版本。
+
+- 请求头：
+
+  请求头由关键字/值对组成，每行一对
+
+  - `User-Agent` : 产生请求的浏览器类型
+  - `Accept` : 客户端希望接受的数据类型，比如 `Accept：text/xml（application/json）`表示希望接受到的是`xml（json）`类型
+  - `Content-Type`：发送端发送的实体数据的数据类型。
+  - 比如，`Content-Type：text/html（application/json）`表示发送的是`html`类型。
+  - `Host` : 请求的主机名，允许多个域名同处一个`IP`地址，即虚拟主机
+
+  `Content-Type:`
+
+  ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/content-type.png)
+
+  **`multipart/form-data`**
+
+  　　用以支持向服务器发送二进制数据，以便可以在 POST 请求中实现文件上传等功能
+
+- 空行
+
+  - 请求头之后是一个空行，通知服务器以下不再有请求头
+
+- 请求体
+
+  - GET没有请求数据，POST有。
+
+```http
+GET /Protocols/rfc2616/rfc2616-sec5.html HTTP/1.1
+Host: www.w3.org
+Connection: keep-alive
+Cache-Control: max-age=0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36
+Referer: https://www.google.com.hk/
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: zh-CN,zh;q=0.8,en;q=0.6
+Cookie: authorstyle=yes
+If-None-Match: "2cc8-3e3073913b100"
+If-Modified-Since: Wed, 01 Sep 2004 13:24:52 GMT
+
+name=qiu&age=25 
+```
+
+### 7.2 HTTP response报文（响应报文）结构是怎样的
+
+- 状态行: HTTP 响应报文的第一行
+
+  状态行包括三个字段：协议版本、状态码与原因短语
+
+  状态码：由3位数字组成，第一个数字定义了响应的类别
+
+- 首行之后是**若干行响应头**，包括：**通用头部，响应头部，实体头部**
+- 响应头部和响应实体之间用**一个CRLF空行**分隔
+- 最后是一个响应正文
+
+```http
+HTTP/1.1 200 OK
+Date: Tue, 08 Jul 2014 05:28:43 GMT
+Server: Apache/2
+Last-Modified: Wed, 01 Sep 2004 13:24:52 GMT
+ETag: "40d7-3e3073913b100"
+Accept-Ranges: bytes
+Content-Length: 16599
+Cache-Control: max-age=21600
+Expires: Tue, 08 Jul 2014 11:28:43 GMT
+P3P: policyref="http://www.w3.org/2001/05/P3P/p3p.xml"
+Content-Type: text/html; charset=iso-8859-1
+
+{"name": "qiu", "age": 25} 
+```
+
