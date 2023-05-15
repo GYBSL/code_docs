@@ -7998,3 +7998,515 @@ public void testSecurity(){
 
 ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-14-12.png)
 
+## 十八、Spring对事务的支持
+
+- 什么是事务
+
+- - 在一个业务流程当中，通常需要多条DML（insert delete update）语句共同联合才能完成，这多条DML语句必须同时成功，或者同时失败，这样才能保证数据的安全。
+  - 多条DML要么同时成功，要么同时失败，这叫做事务。
+  - 事务：Transaction（tx）
+
+- 事务的四个处理过程：
+
+- - 第一步：开启事务 (start transaction)
+  - 第二步：执行核心业务代码
+  - 第三步：提交事务（如果核心业务处理过程中没有出现异常）(commit transaction)
+  - 第四步：回滚事务（如果核心业务处理过程中出现异常）(rollback transaction)
+
+- 事务的四个特性：
+
+  - A 原子性：事务是最小的工作单元，不可再分。
+
+  - C 一致性：事务要求要么同时成功，要么同时失败。事务前和事务后的总量不变。
+  - I 隔离性：事务和事务之间因为有隔离性，才可以保证互不干扰。
+  - D 持久性：持久性是事务结束的标志。
+
+### 引入事务场景
+
+以银行账户转账为例学习事务。两个账户act-001和act-002。act-001账户向act-002账户转账10000，必须同时成功，或者同时失败。（一个减成功，一个加成功， 这两条update语句必须同时成功，或同时失败。）
+
+连接数据库的技术采用Spring框架的JdbcTemplate。
+
+采用三层架构搭建：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-1.png)
+
+模块名：spring6-013-tx-bank（依赖如下）
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powernode</groupId>
+    <artifactId>spring6-013-tx-bank</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <!--仓库-->
+    <repositories>
+        <!--spring里程碑版本的仓库-->
+        <repository>
+            <id>repository.spring.milestone</id>
+            <name>Spring Milestone Repository</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <!--依赖-->
+    <dependencies>
+        <!--spring context-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <!--spring jdbc-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <!--mysql驱动-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.30</version>
+        </dependency>
+      <!--德鲁伊连接池-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.2.13</version>
+        </dependency>
+      <!--@Resource注解-->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.1.1</version>
+        </dependency>
+        <!--junit-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+#### 第一步：准备数据库表
+
+表结构：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-2.png)
+
+表数据：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-3.png)
+
+#### 第二步：创建包结构
+
+com.powernode.bank.pojo
+
+com.powernode.bank.service
+
+com.powernode.bank.service.impl
+
+com.powernode.bank.dao
+
+com.powernode.bank.dao.impl
+
+#### 第三步：准备POJO类
+
+```java
+package com.powernode.bank.pojo;
+
+public class Account {
+    private String actno;
+    private Double balance;
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "actno='" + actno + '\'' +
+                ", balance=" + balance +
+                '}';
+    }
+
+    public Account() {
+    }
+
+    public Account(String actno, Double balance) {
+        this.actno = actno;
+        this.balance = balance;
+    }
+
+    public String getActno() {
+        return actno;
+    }
+
+    public void setActno(String actno) {
+        this.actno = actno;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
+}
+```
+
+#### 第四步：编写持久层
+
+```java
+package com.powernode.bank.dao;
+
+import com.powernode.bank.pojo.Account;
+
+public interface AccountDao {
+
+    /**
+     * 根据账号查询余额
+     * @param actno
+     * @return
+     */
+    Account selectByActno(String actno);
+
+    /**
+     * 更新账户
+     * @param act
+     * @return
+     */
+    int update(Account act);
+
+}
+```
+
+```java
+package com.powernode.bank.dao.impl;
+
+import com.powernode.bank.dao.AccountDao;
+import com.powernode.bank.pojo.Account;
+import jakarta.annotation.Resource;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
+@Repository("accountDao")
+public class AccountDaoImpl implements AccountDao {
+
+    @Resource(name = "jdbcTemplate")
+    private JdbcTemplate jdbcTemplate;
+
+    @Override
+    public Account selectByActno(String actno) {
+        String sql = "select actno, balance from t_act where actno = ?";
+        Account account = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Account.class), actno);
+        return account;
+    }
+
+    @Override
+    public int update(Account act) {
+        String sql = "update t_act set balance = ? where actno = ?";
+        int count = jdbcTemplate.update(sql, act.getBalance(), act.getActno());
+        return count;
+    }
+}
+```
+
+#### 第五步：编写业务层
+
+```java
+package com.powernode.bank.service;
+
+public interface AccountService {
+
+    /**
+     * 转账
+     * @param fromActno
+     * @param toActno
+     * @param money
+     */
+    void transfer(String fromActno, String toActno, double money);
+}
+```
+
+```java
+package com.powernode.bank.service.impl;
+
+import com.powernode.bank.dao.AccountDao;
+import com.powernode.bank.pojo.Account;
+import com.powernode.bank.service.AccountService;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+
+@Service("accountService")
+public class AccountServiceImpl implements AccountService {
+
+    @Resource(name = "accountDao")
+    private AccountDao accountDao;
+
+    @Override
+    public void transfer(String fromActno, String toActno, double money) {
+        // 查询账户余额是否充足
+        Account fromAct = accountDao.selectByActno(fromActno);
+        if (fromAct.getBalance() < money) {
+            throw new RuntimeException("账户余额不足");
+        }
+        // 余额充足，开始转账
+        Account toAct = accountDao.selectByActno(toActno);
+        fromAct.setBalance(fromAct.getBalance() - money);
+        toAct.setBalance(toAct.getBalance() + money);
+        int count = accountDao.update(fromAct);
+        count += accountDao.update(toAct);
+        if (count != 2) {
+            throw new RuntimeException("转账失败，请联系银行");
+        }
+    }
+}
+```
+
+#### 第六步：编写Spring配置文件
+
+```java
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.powernode.bank"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring6"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+</beans>
+```
+
+#### 第七步：编写表示层（测试程序）
+
+```java
+package com.powernode.spring6.test;
+
+import com.powernode.bank.service.AccountService;
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class BankTest {
+    @Test
+    public void testTransfer(){
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+        AccountService accountService = applicationContext.getBean("accountService", AccountService.class);
+        try {
+            accountService.transfer("act-001", "act-002", 10000);
+            System.out.println("转账成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-4.png)
+
+数据变化：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-5.png)
+
+#### 模拟异常
+
+```java
+package com.powernode.bank.service.impl;
+
+import com.powernode.bank.dao.AccountDao;
+import com.powernode.bank.pojo.Account;
+import com.powernode.bank.service.AccountService;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+
+@Service("accountService")
+public class AccountServiceImpl implements AccountService {
+
+    @Resource(name = "accountDao")
+    private AccountDao accountDao;
+
+    @Override
+    public void transfer(String fromActno, String toActno, double money) {
+        // 查询账户余额是否充足
+        Account fromAct = accountDao.selectByActno(fromActno);
+        if (fromAct.getBalance() < money) {
+            throw new RuntimeException("账户余额不足");
+        }
+        // 余额充足，开始转账
+        Account toAct = accountDao.selectByActno(toActno);
+        fromAct.setBalance(fromAct.getBalance() - money);
+        toAct.setBalance(toAct.getBalance() + money);
+        int count = accountDao.update(fromAct);
+        
+        // 模拟异常
+        String s = null;
+        s.toString();
+
+        count += accountDao.update(toAct);
+        if (count != 2) {
+            throw new RuntimeException("转账失败，请联系银行");
+        }
+    }
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-6.png)
+
+数据库表中数据：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-7.png)
+
+**丢了1万。**
+
+### Spring对事务的支持
+
+#### Spring实现事务的两种方式
+
+- 编程式事务
+
+- - 通过编写代码的方式来实现事务的管理。
+
+- 声明式事务
+
+- - 基于注解方式
+  - 基于XML配置方式
+
+#### Spring事务管理API
+
+Spring对事务的管理底层实现方式是基于AOP实现的。采用AOP的方式进行了封装。所以Spring专门针对事务开发了一套API，API的核心接口如下：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-8.png)
+
+PlatformTransactionManager接口：spring事务管理器的核心接口。在**Spring6**中它有两个实现：
+
+- DataSourceTransactionManager：支持JdbcTemplate、MyBatis、Hibernate等事务管理。
+- JtaTransactionManager：支持分布式事务管理。
+
+如果要在Spring6中使用JdbcTemplate，就要使用DataSourceTransactionManager来管理事务。（Spring内置写好了，可以直接用。）
+
+#### 声明式事务之注解实现方式
+
+- 第一步：在spring配置文件中配置事务管理器。
+
+```xml
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+  <property name="dataSource" ref="dataSource"/>
+</bean>
+```
+
+- 第二步：在spring配置文件中引入tx命名空间。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+```
+
+- 第三步：在spring配置文件中配置“事务注解驱动器”，开始注解的方式控制事务。
+
+```xml
+<tx:annotation-driven transaction-manager="transactionManager"/>
+```
+
+- 第四步：在service类上或方法上添加@Transactional注解
+
+在类上添加该注解，该类中所有的方法都有事务。在某个方法上添加该注解，表示只有这个方法使用事务。
+
+```java
+package com.powernode.bank.service.impl;
+
+import com.powernode.bank.dao.AccountDao;
+import com.powernode.bank.pojo.Account;
+import com.powernode.bank.service.AccountService;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * @author 动力节点
+ * @version 1.0
+ * @className AccountServiceImpl
+ * @since 1.0
+ **/
+@Service("accountService")
+@Transactional
+public class AccountServiceImpl implements AccountService {
+
+    @Resource(name = "accountDao")
+    private AccountDao accountDao;
+
+    @Override
+    public void transfer(String fromActno, String toActno, double money) {
+        // 查询账户余额是否充足
+        Account fromAct = accountDao.selectByActno(fromActno);
+        if (fromAct.getBalance() < money) {
+            throw new RuntimeException("账户余额不足");
+        }
+        // 余额充足，开始转账
+        Account toAct = accountDao.selectByActno(toActno);
+        fromAct.setBalance(fromAct.getBalance() - money);
+        toAct.setBalance(toAct.getBalance() + money);
+        int count = accountDao.update(fromAct);
+
+        // 模拟异常
+        String s = null;
+        s.toString();
+
+        count += accountDao.update(toAct);
+        if (count != 2) {
+            throw new RuntimeException("转账失败，请联系银行");
+        }
+    }
+}
+```
+
+当前数据库表中的数据：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-9.png)
+
+执行测试程序：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-10.png)
+
+虽然出现异常了，再次查看数据库表中数据：
+
+​	![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-11.png)
+
+通过测试，发现数据没有变化，事务起作用了。
