@@ -8510,3 +8510,484 @@ public class AccountServiceImpl implements AccountService {
 ​	![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-15-11.png)
 
 通过测试，发现数据没有变化，事务起作用了。
+
+#### 事务属性
+
+##### 事务属性包括哪些
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-1.png)
+
+事务中的重点属性：
+
+- 事务传播行为
+- 事务隔离级别
+- 事务超时
+- 只读事务
+- 设置出现哪些异常回滚事务
+- 设置出现哪些异常不回滚事务
+
+##### 事务传播行为
+
+什么是事务的传播行为？
+
+在service类中有a()方法和b()方法，a()方法上有事务，b()方法上也有事务，当a()方法执行过程中调用了b()方法，事务是如何传递的？合并到一个事务里？还是开启一个新的事务？这就是事务传播行为。
+
+事务传播行为在spring框架中被定义为枚举类型：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-2.png)
+
+一共有七种传播行为：
+
+- REQUIRED：支持当前事务，如果不存在就新建一个(默认)**【没有就新建，有就加入】**
+- SUPPORTS：支持当前事务，如果当前没有事务，就以非事务方式执行**【有就加入，没有就不管了】**
+- MANDATORY：必须运行在一个事务中，如果当前没有事务正在发生，将抛出一个异常**【有就加入，没有就抛异常】**
+- REQUIRES_NEW：开启一个新的事务，如果一个事务已经存在，则将这个存在的事务挂起**【不管有没有，直接开启一个新事务，开启的新事务和之前的事务不存在嵌套关系，之前事务被挂起】**
+- NOT_SUPPORTED：以非事务方式运行，如果有事务存在，挂起当前事务**【不支持事务，存在就挂起】**
+- NEVER：以非事务方式运行，如果有事务存在，抛出异常**【不支持事务，存在就抛异常】**
+- NESTED：如果当前正有一个事务在进行中，则该方法应当运行在一个嵌套式事务中。被嵌套的事务可以独立于外层事务进行提交或回滚。如果外层事务不存在，行为就像REQUIRED一样。**【有事务的话，就在这个事务里再嵌套一个完全独立的事务，嵌套的事务可以独立的提交和回滚。没有事务就和****REQUIRED一样。****】**
+
+在代码中设置事务的传播行为：
+
+```java
+@Transactional(propagation = Propagation.REQUIRED)
+```
+
+可以编写程序测试一下传播行为：
+
+```java
+1号service
+
+@Transactional(propagation = Propagation.REQUIRED)
+public void save(Account act) {
+
+    // 这里调用dao的insert方法。
+    accountDao.insert(act); // 保存act-003账户
+
+    // 创建账户对象
+    Account act2 = new Account("act-004", 1000.0);
+    try {
+        accountService.save(act2); // 保存act-004账户
+    } catch (Exception e) {
+
+    }
+    // 继续往后进行我当前1号事务自己的事儿。
+}
+```
+
+```java
+2号service
+    
+@Override
+//@Transactional(propagation = Propagation.REQUIRED)
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void save(Account act) {
+    accountDao.insert(act);
+    // 模拟异常
+    String s = null;
+    s.toString();
+
+    // 事儿没有处理完，这个大括号当中的后续也许还有其他的DML语句。
+}
+```
+
+**一定要集成Log4j2日志框架，在日志信息中可以看到更加详细的信息。**
+
+##### 事务隔离级别
+
+事务隔离级别类似于教室A和教室B之间的那道墙，隔离级别越高表示墙体越厚。隔音效果越好。
+
+数据库中读取数据存在的三大问题：（三大读问题）
+
+- **脏读：读取到没有提交到数据库的数据，叫做脏读。**
+- **不可重复读：在同一个事务当中，第一次和第二次读取的数据不一样。**
+- **幻读：读到的数据是假的。**
+
+事务隔离级别包括四个级别：
+
+- 读未提交：READ_UNCOMMITTED
+
+- - 这种隔离级别，存在脏读问题，所谓的脏读(dirty read)表示能够读取到其它事务未提交的数据。
+
+- 读提交：READ_COMMITTED
+
+- - 解决了脏读问题，其它事务提交之后才能读到，但存在不可重复读问题。
+
+- 可重复读：REPEATABLE_READ
+
+- - 解决了不可重复读，可以达到可重复读效果，只要当前事务不结束，读取到的数据一直都是一样的。但存在幻读问题。
+
+- 序列化：SERIALIZABLE
+
+- - 解决了幻读问题，事务排队执行。不支持并发。
+
+大家可以通过一个表格来记忆：
+
+| **隔离级别** | **脏读** | **不可重复读** | **幻读** |
+| ------------ | -------- | -------------- | -------- |
+| 读未提交     | **有**   | **有**         | **有**   |
+| 读提交       | 无       | **有**         | **有**   |
+| 可重复读     | 无       | 无             | **有**   |
+| 序列化       | 无       | 无             | 无       |
+
+在Spring代码中如何设置隔离级别？
+
+隔离级别在spring中以枚举类型存在：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-3.png)
+
+```java
+@Transactional(isolation = Isolation.READ_COMMITTED)
+```
+
+测试事务隔离级别：READ_UNCOMMITTED 和 READ_COMMITTED
+
+怎么测试：一个service负责插入，一个service负责查询。负责插入的service要模拟延迟。
+
+```java
+// IsolationService1
+    
+package com.powernode.bank.service.impl;
+
+import com.powernode.bank.dao.AccountDao;
+import com.powernode.bank.pojo.Account;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service("i1")
+public class IsolationService1 {
+
+    @Resource(name = "accountDao")
+    private AccountDao accountDao;
+
+    // 1号
+    // 负责查询
+    // 当前事务可以读取到别的事务没有提交的数据。
+    //@Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    // 对方事务提交之后的数据我才能读取到。
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void getByActno(String actno) {
+        Account account = accountDao.selectByActno(actno);
+        System.out.println("查询到的账户信息：" + account);
+    }
+}
+```
+
+```java
+// IsolationService2
+
+package com.powernode.bank.service.impl;
+
+import com.powernode.bank.dao.AccountDao;
+import com.powernode.bank.pojo.Account;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service("i2")
+public class IsolationService2 {
+
+    @Resource(name = "accountDao")
+    private AccountDao accountDao;
+
+    // 2号
+    // 负责insert
+    @Transactional
+    public void save(Account act) {
+        accountDao.insert(act);
+        // 睡眠一会
+        try {
+            Thread.sleep(1000 * 20);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+```
+
+测试程序
+
+```java
+@Test
+public void testIsolation1(){
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    IsolationService1 i1 = applicationContext.getBean("i1", IsolationService1.class);
+    i1.getByActno("act-004");
+}
+
+@Test
+public void testIsolation2(){
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+    IsolationService2 i2 = applicationContext.getBean("i2", IsolationService2.class);
+    Account act = new Account("act-004", 1000.0);
+    i2.save(act);
+}
+```
+
+通过执行结果可以清晰的看出隔离级别不同，执行效果不同。
+
+##### 事务超时
+
+代码如下：
+
+```java
+@Transactional(timeout = 10)
+```
+
+以上代码表示设置事务的超时时间为10秒。
+
+**表示超过10秒如果该事务中所有的DML语句还没有执行完毕的话，最终结果会选择回滚。**
+
+默认值-1，表示没有时间限制。
+
+**这里有个坑，事务的超时时间指的是哪段时间？**
+
+**在当前事务当中，最后一条DML语句执行之前的时间。如果最后一条DML语句后面很有很多业务逻辑，这些业务代码执行的时间不被计入超时时间。**
+
+```java
+以下代码的超时不会被计入超时时间
+    
+@Transactional(timeout = 10) // 设置事务超时时间为10秒。
+public void save(Account act) {
+    accountDao.insert(act);
+    // 睡眠一会
+    try {
+        Thread.sleep(1000 * 15);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+```java
+以下代码超时时间会被计入超时时间
+    
+@Transactional(timeout = 10) // 设置事务超时时间为10秒。
+public void save(Account act) {
+    // 睡眠一会
+    try {
+        Thread.sleep(1000 * 15);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    accountDao.insert(act);
+}
+```
+
+**当然，如果想让整个方法的所有代码都计入超时时间的话，可以在方法最后一行添加一行无关紧要的DML语句。**
+
+##### 只读事务
+
+代码如下：
+
+```java
+@Transactional(readOnly = true)
+```
+
+将当前事务设置为只读事务，在该事务执行过程中只允许select语句执行，delete insert update均不可执行。
+
+该特性的作用是：**启动spring的优化策略。提高select语句执行效率。**
+
+如果该事务中确实没有增删改操作，建议设置为只读事务。
+
+##### 设置哪些异常回滚事务
+
+代码如下：
+
+```java
+@Transactional(rollbackFor = RuntimeException.class)
+```
+
+表示只有发生RuntimeException异常或该异常的子类异常才回滚。
+
+##### 设置哪些异常不回滚事务
+
+代码如下：
+
+```java
+@Transactional(noRollbackFor = NullPointerException.class)
+```
+
+表示发生NullPointerException或该异常的子类异常不回滚，其他异常则回滚。
+
+#### 事务的全注解式开发
+
+编写一个类来代替配置文件，代码如下：
+
+```java
+package com.powernode.bank;
+
+import com.alibaba.druid.pool.DruidDataSource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
+
+/**
+ * @author 动力节点
+ * @version 1.0
+ * @className Spring6Config
+ * @since 1.0
+ **/
+@Configuration
+@ComponentScan("com.powernode.bank")
+@EnableTransactionManagement
+public class Spring6Config {
+
+    @Bean
+    public DataSource getDataSource(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/spring6");
+        dataSource.setUsername("root");
+        dataSource.setPassword("root");
+        return dataSource;
+    }
+
+    @Bean(name = "jdbcTemplate")
+    public JdbcTemplate getJdbcTemplate(DataSource dataSource){
+        JdbcTemplate jdbcTemplate = new JdbcTemplate();
+        jdbcTemplate.setDataSource(dataSource);
+        return jdbcTemplate;
+    }
+
+    @Bean
+    public DataSourceTransactionManager getDataSourceTransactionManager(DataSource dataSource){
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+        dataSourceTransactionManager.setDataSource(dataSource);
+        return dataSourceTransactionManager;
+    }
+
+}
+```
+
+测试程序如下：
+
+```java
+@Test
+public void testNoXml(){
+    ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Spring6Config.class);
+    AccountService accountService = applicationContext.getBean("accountService", AccountService.class);
+    try {
+        accountService.transfer("act-001", "act-002", 10000);
+        System.out.println("转账成功");
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-4.png)
+
+数据库表中数据：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-5.png)
+
+#### 声明式事务之XML实现方式
+
+配置步骤：
+
+- 第一步：配置事务管理器
+- 第二步：配置通知
+- 第三步：配置切面
+
+记得添加aspectj的依赖：
+
+```xml
+<!--aspectj依赖-->
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-aspects</artifactId>
+  <version>6.0.0-M2</version>
+</dependency>
+```
+
+Spring配置文件如下：
+
+**记得添加aop的命名空间。**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+                           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <context:component-scan base-package="com.powernode.bank"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring6"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置通知-->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>
+            <tx:method name="del*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>
+            <tx:method name="update*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>
+            <tx:method name="transfer*" propagation="REQUIRED" rollback-for="java.lang.Throwable"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置切面-->
+    <aop:config>
+        <aop:pointcut id="txPointcut" expression="execution(* com.powernode.bank.service..*(..))"/>
+        <!--切面 = 通知 + 切点-->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>
+    </aop:config>
+
+</beans>
+```
+
+将AccountServiceImpl类上的@Transactional注解删除。
+
+编写测试程序：
+
+```java
+@Test
+public void testTransferXml(){
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring2.xml");
+    AccountService accountService = applicationContext.getBean("accountService", AccountService.class);
+    try {
+        accountService.transfer("act-001", "act-002", 10000);
+        System.out.println("转账成功");
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+```
+
+执行结果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-6.png)
+
+数据库表中记录：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-7.png)
+
+通过测试可以看到配置XML已经起作用了。
