@@ -16,3 +16,6 @@ group:
 - CSS篇
 - JavaScript篇
 - Vue篇
+- web综合篇
+- 计算机网络篇
+- 面经
