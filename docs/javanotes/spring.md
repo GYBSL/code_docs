@@ -8991,3 +8991,836 @@ public void testTransferXml(){
 ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-16-7.png)
 
 通过测试可以看到配置XML已经起作用了。
+
+## 十九、Spring6整合JUnit5
+
+准备工作：
+
+```java
+pom中
+    
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powernode</groupId>
+    <artifactId>spring6-015-junit</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <!--仓库-->
+    <repositories>
+        <!--spring里程碑版本的仓库-->
+        <repository>
+            <id>repository.spring.milestone</id>
+            <name>Spring Milestone Repository</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!--spring context依赖-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <!--spring对junit的支持相关依赖-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <!--junit4依赖-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+```java
+声明Bean
+
+package com.powernode.spring6.bean;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class User {
+
+    @Value("张三")
+    private String name;
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                '}';
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public User() {
+    }
+
+    public User(String name) {
+        this.name = name;
+    }
+}
+```
+
+```java
+xml中
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:component-scan base-package="com.powernode.spring6.bean"/>
+</beans>
+```
+
+单元测试：
+
+```java
+package com.powernode.spring6.test;
+
+import com.powernode.spring6.bean.User;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:spring.xml")
+public class SpringJUnit4Test {
+
+    @Autowired
+    private User user;
+
+    @Test
+    public void testUser(){
+        System.out.println(user.getName());
+    }
+}
+```
+
+执行结果如下：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-17-1.png)
+
+Spring提供的方便主要是这几个注解：
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:spring.xml")
+
+在单元测试类上使用这两个注解之后，在单元测试类中的属性上可以使用@Autowired。比较方便。
+
+### Spring对JUnit5的支持
+
+引入JUnit5的依赖，Spring对JUnit支持的依赖还是：spring-test，如下：
+
+```xml
+pom中
+    
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powernode</groupId>
+    <artifactId>spring6-015-junit</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <!--仓库-->
+    <repositories>
+        <!--spring里程碑版本的仓库-->
+        <repository>
+            <id>repository.spring.milestone</id>
+            <name>Spring Milestone Repository</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!--spring context依赖-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <!--spring对junit的支持相关依赖-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <!--junit5依赖-->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+```java
+单元测试类
+    
+package com.powernode.spring6.test;
+
+import com.powernode.spring6.bean.User;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration("classpath:spring.xml")
+public class SpringJUnit5Test {
+
+    @Autowired
+    private User user;
+
+    @Test
+    public void testUser(){
+        System.out.println(user.getName());
+    }
+}
+```
+
+在JUnit5当中，可以使用Spring提供的以下两个注解，标注到单元测试类上，这样在类当中就可以使用@Autowired注解了。
+
+@ExtendWith(SpringExtension.class)
+
+@ContextConfiguration("classpath:spring.xml")
+
+## 二十、Spring6集成MyBatis3.5
+
+### 实现步骤
+
+- 第一步：准备数据库表
+
+- - 使用t_act表（账户表）
+
+- 第二步：IDEA中创建一个模块，并引入依赖
+
+- - spring-context
+  - spring-jdbc
+  - mysql驱动
+  - mybatis
+  - mybatis-spring：**mybatis提供的与spring框架集成的依赖**
+  - 德鲁伊连接池
+  - junit
+
+- 第三步：基于三层架构实现，所以提前创建好所有的包
+
+- - com.powernode.bank.mapper
+  - com.powernode.bank.service
+  - com.powernode.bank.service.impl
+  - com.powernode.bank.pojo
+
+- 第四步：编写pojo
+
+- - Account，属性私有化，提供公开的setter getter和toString。
+
+- 第五步：编写mapper接口
+
+- - AccountMapper接口，定义方法
+
+- 第六步：编写mapper配置文件
+
+- - 在配置文件中配置命名空间，以及每一个方法对应的sql。
+
+- 第七步：编写service接口和service接口实现类
+
+- - AccountService
+  - AccountServiceImpl
+
+- 第八步：编写jdbc.properties配置文件
+
+- - 数据库连接池相关信息
+
+- 第九步：编写mybatis-config.xml配置文件
+
+- - 该文件可以没有，大部分的配置可以转移到spring配置文件中。
+  - 如果遇到mybatis相关的系统级配置，还是需要这个文件。
+
+- 第十步：编写spring.xml配置文件
+
+- - 组件扫描
+  - 引入外部的属性文件
+  - 数据源
+  - SqlSessionFactoryBean配置
+
+- - - 注入mybatis核心配置文件路径
+    - 指定别名包
+    - 注入数据源
+
+- - Mapper扫描配置器
+
+- - - 指定扫描的包
+
+- - 事务管理器DataSourceTransactionManager
+
+- - - 注入数据源
+
+- - 启用事务注解
+
+- - - 注入事务管理器
+
+- 第十一步：编写测试程序，并添加事务，进行测试
+
+### 具体实现
+
+- 第一步：准备数据库表
+
+连接数据库的工具有很多，除了之前我们使用的navicat for mysql之外，也可以使用IDEA工具自带的DataBase插件。可以根据下图提示自行配置：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-17-2.png)
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-17-3.png)
+
+- 第二步：IDEA中创建一个模块，并引入依赖
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powernode</groupId>
+    <artifactId>spring6-016-sm</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <!--仓库-->
+    <repositories>
+        <!--spring里程碑版本的仓库-->
+        <repository>
+            <id>repository.spring.milestone</id>
+            <name>Spring Milestone Repository</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>6.0.0-M2</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>2.0.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.2.13</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>
+```
+
+- 第三步：基于三层架构实现，所以提前创建好所有的包
+
+  ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-17-4.png)
+
+- 第四步：编写pojo
+
+```java
+package com.powernode.bank.pojo;
+
+public class Account {
+    private String actno;
+    private Double balance;
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "actno='" + actno + '\'' +
+                ", balance=" + balance +
+                '}';
+    }
+
+    public Account() {
+    }
+
+    public Account(String actno, Double balance) {
+        this.actno = actno;
+        this.balance = balance;
+    }
+
+    public String getActno() {
+        return actno;
+    }
+
+    public void setActno(String actno) {
+        this.actno = actno;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
+}
+```
+
+- 第五步：编写mapper接口
+
+```java
+package com.powernode.bank.mapper;
+
+import com.powernode.bank.pojo.Account;
+
+import java.util.List;
+
+public interface AccountMapper {
+
+    /**
+     * 保存账户
+     * @param account
+     * @return
+     */
+    int insert(Account account);
+
+    /**
+     * 根据账号删除账户
+     * @param actno
+     * @return
+     */
+    int deleteByActno(String actno);
+
+    /**
+     * 修改账户
+     * @param account
+     * @return
+     */
+    int update(Account account);
+
+    /**
+     * 根据账号查询账户
+     * @param actno
+     * @return
+     */
+    Account selectByActno(String actno);
+
+    /**
+     * 获取所有账户
+     * @return
+     */
+    List<Account> selectAll();
+}
+```
+
+- 第六步：编写mapper配置文件
+
+一定要注意，按照下图提示创建这个目录。注意是斜杠不是点儿。在resources目录下新建。并且要和Mapper接口包对应上。
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-17-5.png)
+
+如果接口叫做AccountMapper，配置文件必须是AccountMapper.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.powernode.bank.mapper.AccountMapper">
+    <insert id="insert">
+        insert into t_act values(#{actno}, #{balance})
+    </insert>
+    <delete id="deleteByActno">
+        delete from t_act where actno = #{actno}
+    </delete>
+    <update id="update">
+        update t_act set balance = #{balance} where actno = #{actno}
+    </update>
+    <select id="selectByActno" resultType="Account">
+        select * from t_act where actno = #{actno}
+    </select>
+    <select id="selectAll" resultType="Account">
+        select * from t_act
+    </select>
+</mapper>
+```
+
+- 第七步：编写service接口和service接口实现类
+
+注意编写的service实现类纳入IoC容器管理：
+
+```java
+AccountService接口
+    
+package com.powernode.bank.service;
+
+import com.powernode.bank.pojo.Account;
+
+import java.util.List;
+
+public interface AccountService {
+    /**
+     * 开户
+     * @param act
+     * @return
+     */
+    int save(Account act);
+
+    /**
+     * 根据账号销户
+     * @param actno
+     * @return
+     */
+    int deleteByActno(String actno);
+
+    /**
+     * 修改账户
+     * @param act
+     * @return
+     */
+    int update(Account act);
+
+    /**
+     * 根据账号获取账户
+     * @param actno
+     * @return
+     */
+    Account getByActno(String actno);
+
+    /**
+     * 获取所有账户
+     * @return
+     */
+    List<Account> getAll();
+
+    /**
+     * 转账
+     * @param fromActno
+     * @param toActno
+     * @param money
+     */
+    void transfer(String fromActno, String toActno, double money);
+}
+```
+
+```java
+AccountServiceImpl，注入AccountMapper
+    
+package com.powernode.bank.service.impl;
+
+import com.powernode.bank.mapper.AccountMapper;
+import com.powernode.bank.pojo.Account;
+import com.powernode.bank.service.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Transactional
+@Service("accountService")
+public class AccountServiceImpl implements AccountService {
+
+    @Autowired
+    private AccountMapper accountMapper;
+
+    @Override
+    public int save(Account act) {
+        return accountMapper.insert(act);
+    }
+
+    @Override
+    public int deleteByActno(String actno) {
+        return accountMapper.deleteByActno(actno);
+    }
+
+    @Override
+    public int update(Account act) {
+        return accountMapper.update(act);
+    }
+
+    @Override
+    public Account getByActno(String actno) {
+        return accountMapper.selectByActno(actno);
+    }
+
+    @Override
+    public List<Account> getAll() {
+        return accountMapper.selectAll();
+    }
+
+    @Override
+    public void transfer(String fromActno, String toActno, double money) {
+        Account fromAct = accountMapper.selectByActno(fromActno);
+        if (fromAct.getBalance() < money) {
+            throw new RuntimeException("余额不足");
+        }
+        Account toAct = accountMapper.selectByActno(toActno);
+        fromAct.setBalance(fromAct.getBalance() - money);
+        toAct.setBalance(toAct.getBalance() + money);
+        int count = accountMapper.update(fromAct);
+        count += accountMapper.update(toAct);
+        if (count != 2) {
+            throw new RuntimeException("转账失败");
+        }
+    }
+}
+```
+
+- 第八步：编写jdbc.properties配置文件
+
+放在类的根路径下
+
+```properties
+jdbc.driver=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/spring6
+jdbc.username=root
+jdbc.password=root
+```
+
+- 第九步：编写mybatis-config.xml配置文件
+
+放在类的根路径下，只开启日志，其他配置到spring.xml中。
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+</configuration>
+```
+
+- 第十步：编写spring.xml配置文件
+
+**注意：当你在spring.xml文件中直接写标签内容时，IDEA会自动给你添加命名空间**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+  
+    <!--组件扫描-->
+    <context:component-scan base-package="com.powernode.bank"/>
+  
+    <!--外部属性配置文件-->
+    <context:property-placeholder location="jdbc.properties"/>
+
+    <!--数据源-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--SqlSessionFactoryBean-->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--mybatis核心配置文件路径-->
+        <property name="configLocation" value="mybatis-config.xml"/>
+        <!--注入数据源-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--起别名-->
+        <property name="typeAliasesPackage" value="com.powernode.bank.pojo"/>
+    </bean>
+
+    <!--Mapper扫描器-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.powernode.bank.mapper"/>
+    </bean>
+
+    <!--事务管理器-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--开启事务注解-->
+    <tx:annotation-driven transaction-manager="txManager"/>
+
+</beans>
+```
+
+- 第十一步：编写测试程序，并添加事务，进行测试
+
+```java
+package com.powernode.spring6.test;
+
+import com.powernode.bank.service.AccountService;
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SMTest {
+
+    @Test
+    public void testSM(){
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
+        AccountService accountService = applicationContext.getBean("accountService", AccountService.class);
+        try {
+            accountService.transfer("act-001", "act-002", 10000.0);
+            System.out.println("转账成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("转账失败");
+        }
+    }
+
+}
+```
+
+**最后大家别忘了测试事务！！！！**
+
+### Spring配置文件的import
+
+spring配置文件有多个，并且可以在spring的核心配置文件中使用import进行引入，我们可以将组件扫描单独定义到一个配置文件中，如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--组件扫描-->
+    <context:component-scan base-package="com.powernode.bank"/>
+
+</beans>
+```
+
+然后在核心配置文件中引入：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--引入其他的spring配置文件-->
+    <import resource="common.xml"/>
+
+</beans>
+```
+
+**注意：在实际开发中，service单独配置到一个文件中，dao单独配置到一个文件中，然后在核心配置文件中引入，养成好习惯。**
+
+## 二十一、Spring中的八大模式
+
+### 简单工厂模式
+
+BeanFactory的getBean()方法，通过唯一标识来获取Bean对象。是典型的简单工厂模式（静态工厂模式）；
+
+### 工厂方法模式
+
+FactoryBean是典型的工厂方法模式。在配置文件中通过factory-method属性来指定工厂方法，该方法是一个实例方法。
+
+### 单例模式
+
+Spring用的是双重判断加锁的单例模式。请看下面代码，我们之前讲解Bean的循环依赖的时候见过：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/spring-5-17-6.png)
+
+### 代理模式
+
+Spring的AOP就是使用了动态代理实现的。
+
+### 装饰器模式
+
+JavaSE中的IO流是非常典型的装饰器模式。
+
+Spring 中配置 DataSource 的时候，这些dataSource可能是各种不同类型的，比如不同的数据库：Oracle、SQL Server、MySQL等，也可能是不同的数据源：比如apache 提供的org.apache.commons.dbcp.BasicDataSource、spring提供的org.springframework.jndi.JndiObjectFactoryBean等。
+
+这时，能否在尽可能少修改原有类代码下的情况下，做到动态切换不同的数据源？此时就可以用到装饰者模式。
+
+Spring根据每次请求的不同，将dataSource属性设置成不同的数据源，以到达切换数据源的目的。
+
+**Spring中类名中带有：Decorator和Wrapper单词的类，都是装饰器模式。**
+
+### 观察者模式
+
+定义对象间的一对多的关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并自动更新。Spring中观察者模式一般用在listener的实现。
+
+Spring中的事件编程模型就是观察者模式的实现。在Spring中定义了一个ApplicationListener接口，用来监听Application的事件，Application其实就是ApplicationContext，ApplicationContext内置了几个事件，其中比较容易理解的是：ContextRefreshedEvent、ContextStartedEvent、ContextStoppedEvent、ContextClosedEvent
+
+### 策略模式
+
+策略模式是行为性模式，调用不同的方法，适应行为的变化 ，强调父类的调用子类的特性 。
+
+getHandler是HandlerMapping接口中的唯一方法，用于根据请求找到匹配的处理器。
+
+比如我们自己写了AccountDao接口，然后这个接口下有不同的实现类：AccountDaoForMySQL，AccountDaoForOracle。对于service来说不需要关心底层具体的实现，只需要面向AccountDao接口调用，底层可以灵活切换实现，这就是策略模式。
+
+### 模板方法模式
+
+Spring中的JdbcTemplate类就是一个模板类。它就是一个模板方法设计模式的体现。在模板类的模板方法execute中编写核心算法，具体的实现步骤在子类中完成。
