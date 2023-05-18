@@ -5,8 +5,6 @@ toc: content
 
 # 前端高频面试题计算机网络篇
 
-## 一、HTTP协议
-
 ## 1. GET和POST的请求的区别
 
 Post 和 Get 是 HTTP 请求的两种方法，其区别如下：
