@@ -1,10 +1,10 @@
 ---
 title: 力扣算法
-order: 3
+order: 2
 toc: content
 group:
   title: 前端
-  order: 3
+  order: 2
 ---
 
 
