@@ -5,6 +5,88 @@ toc: content
 
 # 前端高频面试题 Vue 篇
 
+## 1. 谈谈你对vue的理解
+
+官方：Vue是一套用于构建用户界面的**渐进式框架**，Vue的核心库只关注视图层
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-1.png)
+
+### 1.1 声明式框架
+
+Vue 的核心特点，用起来简单。那我们就有必要知道**命令式和声明式**的区别!
+
+- 早在 JQ 的时代编写的代码都是命令式的，命令式框架重要特点就是关注过程。
+- 声明式框架更加关注结果。命令式的代码封装到了 Vuejs 中，过程靠 vuejs 来实现
+
+声明式代码更加简单，不需要关注实现，按照要求填代码就可以(给上原材料就出结果)
+
+```javascript
+-命令式编程:
+let numbers = [1,2,3,4,5]
+let total = 0
+for(let i = 0; i < numbers.length; i++) {
+    total += numbers[i] -关注了过程
+}
+console.log(tota1)
+
+-声明式编程:
+let total2 = numbers.reduce(function (memo , current) {
+	return memo + current
+},0)
+console.log(total2)
+```
+
+### 1.2 MVVM 模式
+
+说起`MVVM`，就要知道另一个东东那就是`MVC`。为什么要有这些模式呢? 
+
+目的: 职责划分、分层管理.
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-2.png)
+
+对于前端而言就是如何将数据同步到页面上，也是借鉴后端思想。
+
+- MVC 模式: `Backbone + underscore + jquery`
+
+  对于前端而言，数据变化无法同步到视图中。需要将逻辑聚拢在controller 层
+
+- MVVM 模式︰映射关系的简化 (隐藏controller)
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-3.png)
+
+虽然没有完全遵循MVVM模型，但是Vue的设计也受到了它的启发。因此在文档中经常会使用 vm (ViewModel的缩写) 这个变量名表示 Vue 实例。
+
+### 1.3 采用虚拟DOM
+
+传统更新页面，拼接一个完整的字符串 innerHTML 全部重新渲染，添加虚拟DOM后，可以比较新旧虚拟节点，找到变化再进行更新。虚拟DOM就是一个对象，用来描述真实 DOM 的
+https://github.com/vuejs/vue/blob/main/src/core/vdom/vnode.ts
+
+### 1.4 区分编译时(打包)和运行(浏览器)时
+
+- Vue 的渲染核心就是调用渲染（render) 方法将虚拟 DOM 渲染成真实 DOM (缺点就是虚拟DOM编写麻烦)
+- 专门写个编译时可以将模板编译成虚拟 DOM (在构建的时候进行编译性能更高，不需要再运行的时候进行编译)
+
+### 1.5 组件化
+
+实现高内聚、低耦合、单向数据流
+
+- 组件化开发能大幅提高应用开发效率、测试性、复用性等;
+- 降低更新范围，只重新渲染变化的组件
+
+<TipP>Vue 是一个渐进式的框架，它具有声明式渲染，采用 MVVM 的模式进行数据的绑定渲染，但是又不是完全的 MVVM 模式，它只是借鉴了 MVVM 模式的思想，vue 采用模板语法来操作虚拟 dom，来实现跨平台和减少操作真实 dom 的效果，vue还区分了编译时和运行时，vue也是支持组件化开发的这么一个前端框架。</TipP>
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 1. Vue响应式原理
 
 ### vue2 响应式原理
