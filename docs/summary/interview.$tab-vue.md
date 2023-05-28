@@ -142,11 +142,9 @@ https://github.com/vuejs/vue/blob/main/src/core/vdom/vnode.ts
 ## 5.既然 Vue 通过数据劫持可以精准探测数据变化，为什么还需要虚拟 DOM 进行 diff 检测差异?
 Vue 内部设计原因导致，vue 设计的是每个组件一个 watcher (渲染 watcher)，没有采用一个属性对应一个 watcher。粒度过低这样会导致大量 watcher 的产生而且浪费内存，如果粒度过低也无法精准检测变化。所以采用 diff 算法＋组件级 swatcher。
 
+## 6. Vue响应式原理
 
-
-## 1. Vue响应式原理
-
-### vue2 响应式原理
+### 6.1 vue2 响应式原理
 
 > 实现原理
 
@@ -163,119 +161,87 @@ Object.defineProperty(data,key,{
 })
 ```
 
-- 问题（vue2中实现响应式的方式任然存在一些问题）
-  - 对象直接新添加的属性或删除已有属性, 界面不会自动更新
-  - 直接通过下标替换元素或更新length, 界面不会自动更新 arr[1] = {}
+手写vue响应式：
 
+```javascript
+let obj = {name:'gy',age:23,n:{sex:'男'}}
 
+function defineReactive(target,key,value){
+    observe(value)
 
-知道了 `vue2` 的响应式原理和存在的问题后，那让我们练一下 `vue2` 响应式的实现案例：
-
-```js
-// 源数据
-let person = {
-    name: "张三",
-    age: 23
-};
-
-// 创建一个空对象
-let p = {};
-// 通过 Object.keys 遍历 person 对象
-// Object.keys 会返回一个数组，数组中包含传入对象的每个属性名,如 Object.keys(person) 返回：["name","age"]
-Object.keys(person).forEach(key=>{
-    Object.defineProperty(p,key,{
-        // 想要删除 p 中的属性想要配置 configurable 为 true
-        configurable: true,
-        // 当读取 p 中某个属性时调用 get 方法
+    Object.defineProperty(target,key,{
         get(){
-            console.log(`读取了p的${key}属性`);
-            // 返回读取的属性值
-        	return person[key];
-		},
-        // 当修改或者新增 p 中某个属性时调用 set 方法
-        set(value){
-        	console.log(`${key}属性的值被修改成了${value}，这里可以写更新页面的逻辑了`);
-            // 修改person的属性值
-        	person[key]=value
+            return value
+        },
+        set(newValue){
+            if(value!==newValue){
+                value==newValue
+                observe(newValue)
+            }
         }
-    });
-})
+    })
+}
+
+function observe(data){
+    if(typeof data !=="object" || data == null){
+        return data
+    }
+
+    for(let key in data){
+        defineReactive(data,key,data[key])
+    }
+}
+
+
+observe(obj)
+console.log(obj)
 ```
 
-在浏览器控制台中，我们依次访问 `person` 、`p` 对象，打印如下图
+效果：
 
-当我们读取 `p` 的属性时，会触发 `get` 方法；同理修改 `p` 的属性值时，也会触发 `set` 方法
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-4.png)
 
-现在我们知道，在 `set` 方法中封装实现页面更新的代码逻辑就可以实现响应式了
+### 6.2 vue2 处理缺陷
+- 在vue2的时候使用`defineProperty` 来进行数据的劫持, 需要对属性进行重写添加`getter`及`setter`性能差。
+- 当新增属性和删除属性时无法监控变化。需要通过$set、$delete实现
+- 数组不采用`defineProperty`来进行劫持（浪费性能，对所有索引进行劫持会造成性能浪费）需要对数组单独进行处理。
+- 对于ES6中新产生的Map、Set这些数据结构不支持。
 
-但是 `vue2` 的这种响应式原理任然存在部分缺点
-
-如下图，我们在 `p` 中添加新属性 `sex` 时，并没有触发  `get` 或 `set` 方法，因此也不能触发响应式的逻辑代码
-
-删除某个属性时，同样不会触发  `get` 或 `set` 方法
-
-![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue2xysyl.png)
-
-
-
-### vue3 响应式原理
+### 6.3 vue3 响应式原理
 
 > 实现原理:
 
 - 通过`Proxy` (代理): 拦截对 `data` 任意属性的任意(13种)操作, 包括属性值的读写, 属性的添加, 属性的删除等
-- 通过 `Reflect` (反射): 动态对被代理对象的相应属性进行特定的操作
 
+手写vue3响应式：
 
+```javascript
+let obj = {name:'gy',age:23,n:{sex:'男'}}
 
-> 这里需要知道 `Reflect` 
-
-**Reflect的概述**
-
-Reflect 将 Object 对象的一些明显属于语言内部的方法（比如 `Object.defineProperty` ），放到 Reflect 对象上
-
-修改某些 Object 方法的返回结果，让其变得更合理。比如，`Object.defineProperty(obj, name, desc)` 在无法定义属性时会抛出一个错误定义成功时返回修改后的对象。而 `Reflect.defineProperty(obj, name, desc)` 在定义属性成功时返回 `true` 失败时返回 `false`。
-
-
-
-知道了实现原理和`Reflect`，让我们手撸一下 `vue3` 实现原理案例
-
-```js
-// 源数据
-let person = {
-    name: "张三",
-    age: 23
-};
-
-// 创建一个 Proxy 的对象，在 Proxy 对象中传入一个源数据和一个对象
-const p = new Proxy(person,{
-    // 当读取 p 中某个属性时调用 get 方法
-    // target形参是指向源数据，propName形参是被读取或者修改的属性名
-    get(target,propName){
-        console.log(`读取了p的${propName}属性`);
-        return Reflect.get(target,propName)
+let handler = {
+    get(target,key){
+        console.log('取值');
+        let temp = target[key]
+        if(typeof temp ==="object"){
+            return new Proxy(temp,handler)
+        }
+        return temp
     },
-    // 当修改或者新增 p 中某个属性时调用 set 方法
-    set(target,propName,value){
-        console.log(`修改了p的${propName}属性的值，修改成了${value},可以更新页面了`);
-        Reflect.set(target,propName,value)
-    },
-    // 当删除 p 中某个属性时调用 deleteProperty 方法
-    deleteProperty(target,propName){
-        console.log(`删除了p的${propName}属性`);
-        return Reflect.deleteProperty(target,propName)
+    set(target,key,value){
+        console.log('赋值');
+        target[key]=value
     }
-});
+}
+
+function reactive(target){
+    return new Proxy(target,handler)
+}
+
+let proxy=reactive(obj)
+console.log(proxy)
 ```
 
+效果：
 
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-5.png)
 
-同样，在浏览器控制台中，我们依次访问 `p` 、 `person` 对象，打印如下图
-
-发现 `p` 是一个 `Proxy` 的对象
-
-` vue3` 的这种响应式原理，解决了 `vue2` 对象直接新添加的属性或删除已有属性, 不会触发 `set` 方法，界面不会自动更新的问题
-
-同时，`Reflect` 使代码的健壮性更好
-
-
-![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue3xysyl.png)
