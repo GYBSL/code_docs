@@ -124,9 +124,23 @@ https://github.com/vuejs/vue/blob/main/src/core/vdom/vnode.ts
 - 当响应式数据发生变化时，将会引起组件重新 render，此时就会生成新的 VDOM - newVnode
 - 使用 oldVnode 与 newVnode 做 diff 操作，将更改的部分应到真实 DOM 上，从而转换为最小量的 dom 操作，高效更新视图。
 
+## 4. 谈一谈对 vue 组件化的理解
+`webComponent` 组件化的核心组成:	模板、属性、事件、插槽、生命周期。
 
+组件化好处:	高内聚、可重用、可组合
 
+- 组件化开发能大幅提高应用开发效率、测试性、复用性等;
+- 降低更新范围，只重新渲染变化的组件;
 
+补充:
+
+- vue 中的每个组件都有一个渲染函数 `watcher` (vue2)、`effect` (vue3)。
+- 数据是响应式的，数据变化后会执行watcher或者effect。
+- 组件要合理的划分，如果不拆分组件，那更新的时候整个页面都要重新更新。
+- 如果过分的拆分组件会导致watcher、effect产生过多也会造成性能浪费。
+
+## 5.既然 Vue 通过数据劫持可以精准探测数据变化，为什么还需要虚拟 DOM 进行 diff 检测差异?
+Vue 内部设计原因导致，vue 设计的是每个组件一个 watcher (渲染 watcher)，没有采用一个属性对应一个 watcher。粒度过低这样会导致大量 watcher 的产生而且浪费内存，如果粒度过低也无法精准检测变化。所以采用 diff 算法＋组件级 swatcher。
 
 
 
