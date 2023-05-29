@@ -151,6 +151,7 @@ Vue 内部设计原因导致，vue 设计的是每个组件一个 watcher (渲�
 - 对象类型: 通过 `object.defineProperty()` 对属性的读取、修改进行拦截(数据劫持)
 - 数组类型: 通过重写更新数组的一系列方法来实现拦截。(对数组的变更方法进行了包裹)
   - 如：vue 中对数组的 `push、pop、shift` 等方法重写实现响应式
+  - 但是有缺陷：数组的索引和长度的变化是无法监听的
 
 
 ```js
@@ -161,7 +162,7 @@ Object.defineProperty(data,key,{
 })
 ```
 
-手写vue响应式：
+手写vue响应式（对象类型）：
 
 ```javascript
 let obj = {name:'gy',age:23,n:{sex:'男'}}
@@ -201,7 +202,62 @@ console.log(obj)
 
 ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-4.png)
 
+手写vue2响应式原理（数组的方法重写原理）：
+
+```javascript
+let arr=[1,2,3,4,5]
+
+let oldArray=Array.prototype;
+let newArray=Object.create(Array.prototype);// Object.create方法接收两个参数，第一个参数是要继承的原型（也就是说第一个参数会作为原型prototype被挂载，第二个参数也是一个对象，可以对新对象做初始化，第二个参数可省略）
+
+['push','shift','unshift','pop','reverse','sort','splice'].forEach(method=>{
+    newArray[method]=(...args)=>{
+        console.log('调用了'+method+'方法')
+    }
+})
+
+function defineReactive(target,key,value){
+    observe(value)
+
+    Object.defineProperty(target,key,{
+        get(){
+            console.log('222');
+            return value
+        },
+        set(newValue){
+            console.log(333);
+            if(value!==newValue){
+                value==newValue
+                observe(newValue)
+            }
+        }
+    })
+}
+
+function observe(data){
+    if(typeof data !=="object" || data == null){
+        return data
+    }
+
+    // 如果是数组，就将该数组的原型__proto__指向自己重写了方法的数组原型上去
+    if(Array.isArray(data)){
+        data.__proto__=newArray
+    }
+
+    for(let key in data){
+        defineReactive(data,key,data[key])
+    }
+}
+
+observe(arr)
+```
+
+效果：
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-29-1.png)
+
 ### 6.2 vue2 处理缺陷
+
 - 在vue2的时候使用`defineProperty` 来进行数据的劫持, 需要对属性进行重写添加`getter`及`setter`性能差。
 - 当新增属性和删除属性时无法监控变化。需要通过$set、$delete实现
 - 数组不采用`defineProperty`来进行劫持（浪费性能，对所有索引进行劫持会造成性能浪费）需要对数组单独进行处理。
