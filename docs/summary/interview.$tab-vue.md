@@ -301,3 +301,26 @@ console.log(proxy)
 
 ![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-28-5.png)
 
+## 7. vue中如何进行依赖收集?
+
+### 7.1 依赖收集的流程
+
+- 每个属性都拥有自己的`dep`属性，存放他所依赖的`watcher`，当属性变化后会通知自己对应的`watcher`去更新
+- 默认在初始化时会调用`render`函数，此时会触发属性依赖收集`dep.depend`
+- 当属性发生修改时会触发`watcher`更新`dep.notify`
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/vue-5-29-2.png)
+
+vue2中，在创建vue实例的时候，执行到`$mount` 挂载组件的时候，会给每一个组件对应的创建一个`watcher` ，`watcher`会调用`rander`函数去渲染页面，渲染的过程中会调用一些响应式数据，每个数据的属性都会有一个`dep`属性，这个`dep`会记录组件watcher的全局地址值，如果数据变化了，set方法就会通过dep属性找到并调用notify方法通知对应组件的进行渲染
+
+vue3中也是同理，只不过稍有不同
+
+### 7.2 vue3依赖收集
+
+- vue3中会通过Map结构将属性和`effect`映射起来。
+
+- 默认在初始化时会调用render函数，此时会触发属性依赖收集track 
+- 当属性发生修改时会找到对应的effect列表依次执行trigger
+
+
+
