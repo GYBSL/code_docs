@@ -322,5 +322,81 @@ vue3中也是同理，只不过稍有不同
 - 默认在初始化时会调用render函数，此时会触发属性依赖收集track 
 - 当属性发生修改时会找到对应的effect列表依次执行trigger
 
+## 8. vue. set 方法是如何实现的
+vue2中不允许在已经创建的实例上动态添加新的响应式属性；数组的索引和长度的变化也不会被响应式监听
 
+所以 `Vue. set` 可以将对象的属性和数组的索引和长度的变化响应式化
 
+`Vue. set`和 `$set` 是同一个东西
+
+源码如下：
+
+```javascript
+export function set(
+  target: any[] | Record<string, any>,
+  key: any,
+  val: any
+): any {
+  // 1.是开发环境 target 没定义或者是基础类型则报错
+  if (__DEV__ && (isUndef(target) || isPrimitive(target))) {
+    warn(
+      `Cannot set reactive property on undefined, null, or primitive value: ${target}`
+    )
+  }
+  if (isReadonly(target)) {
+    __DEV__ && warn(`Set operation on key "${key}" failed: target is readonly.`)
+    return
+  }
+  const ob = (target as any).__ob__
+  // 2. 如果是数组 Vue.set(array,1,100); 调用我们重写的splice方法（这样可以通知更新视图）
+  if (isArray(target) && isValidArrayIndex(key)) {
+    target.length = Math.max(target.length, key)
+    target.splice(key, 1, val)
+    // when mocking for SSR, array methods are not hijacked
+    if (ob && !ob.shallow && ob.mock) {
+      observe(val, false, true)
+    }
+    return val
+  }
+  // 3. 如果是对象本身的属性，则直接添加即可
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val
+    return val
+  }
+  // 4. 如果是Vue实例或根数据data时报错，（更新_data_无意义）
+  if ((target as any)._isVue || (ob && ob.vmCount)) {
+    __DEV__ &&
+      warn(
+        'Avoid adding reactive properties to a Vue instance or its root $data ' +
+          'at runtime - declare it upfront in the data option.'
+      )
+    return val
+  }
+  // 5. 如果不是响应式的也不需要将其定义成响应式属性
+  if (!ob) {
+    target[key] = val
+    return val
+  }
+  // 6. 将属性定义成响应式的
+  defineReactive(ob.value, key, val, undefined, ob.shallow, ob.mock)
+  if (__DEV__) {
+    ob.dep.notify({
+      type: TriggerOpTypes.ADD,
+      target: target,
+      key,
+      newValue: val,
+      oldValue: undefined
+    })
+  } else {
+    // 通知视图更新
+    ob.dep.notify()
+  }
+  return val
+}
+```
+
+当我们选择新增属性时，可以考虑使用对象合并的方式实现
+
+```
+this.info = {...this.info,...{inewProperty1:1, newProperty2:2...}}
+```
