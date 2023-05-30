@@ -400,3 +400,45 @@ export function set(
 ```
 this.info = {...this.info,...{inewProperty1:1, newProperty2:2...}}
 ```
+
+## 9. Vue中的v-show 和v-if 怎么理解?
+### 9.1 基本概念
+
+- v-if 如果条件不成立不会渲染当前指令所在节点的dom元素
+- v-show只是切换当前dom的显示或者隐藏display、opacity、visivibility
+- v-show 的实现会记录原有dom节点上的display属性，如果有display属性就会记录其值，如果没有就不会记录，调用v-show时就会在dom上添加display属性，属性值为原来记录的值和none
+
+### 9.2 如何选择
+
+v-if 可以阻断内部代码是否执行，如果条件不成立不会执行内部逻辑
+
+如果页面逻辑在第一次加载的时候已经被确认后续不会频繁更改则采用 v-if
+
+## 10. computed和watch区别
+Vue2中有三种watcher(渲染watcher、计算属性watcher、用户watcher)
+
+Vue3中有三种effect(渲染effect 、计算属性effect、用户effect)
+
+### 10.1 computed
+
+- 计算属性仅当用户取值时才会执行对应的方法。
+- computed 属性是具备缓存的，依赖的值不发生变化，对其取值时计算属性方法不会重新执行。
+- 计算属性可以简化模板中复杂表达式。
+- 计算属性中不支持异步逻辑。
+- computed属性是可以再模板中使用的。
+- 多次执行会通过dirty变量来控制是否重新执行
+
+### 10.2 watch
+
+watch则是监控值的变化，当值发生变化时调用对应的回调函数。经常用于监控某个值的变化，进行一些操作。(异步要注意竞态问题)
+
+vue3提供了onCleanup函数，让用户更加方便使用也解决了清理问题。
+
+## 11. 解释 ref 和 reactive 区别?
+
+### 11.1 基本概念
+
+ref 和 reactive 是 Vue3 数据响应式中非常重要的两个概念。
+
+- `reactive` 用于处理对象类型的数据响应式。底层采用的是`new Proxy()`，`reactive`中只能处理对象类型的数据，如果嵌套`ref`，则会进行自动拆包，调用不需要 `.value`
+- `ref` 通常用于处理基本类型数据的响应式, ref 主要解决原始值的响应式问题。底层采用的是`Object.defineProperty()` 实现的。ref 也可以操作引用类型的数据，底层是通过`new Proxy()` 代理。
