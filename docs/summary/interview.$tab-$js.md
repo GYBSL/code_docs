@@ -3429,3 +3429,419 @@ obj1.a =  null
 - **被遗忘的计时器或回调函数：** 设置了 setInterval 定时器，而忘记取消它，如果循环函数有对外部变量的引用的话，那么这个变量会被一直留在内存中，而无法被回收。
 - **脱离 DOM 的引用：** 获取一个 DOM 元素的引用，而后面这个元素被删除，由于一直保留了对这个元素的引用，所以它也无法被回收。
 - **闭包：** 不合理的使用闭包，从而导致某些变量一直被留在内存当中。
+
+
+
+## 29. 深入理解
+
+### 29.1 Promise的实例方法和静态方法及 6 个静态方法
+
+#### Promise 的实例方法有 then、catch、finally 三种
+
+1. `Promise.prototype.then()`
+2. `Promise.prototype.catch()`
+3. `Promise.prototype.finally()`
+
+如果上面没有定义 reject 方法或者在抛出错误，那么所有的异常会走向 catch 方法，而 catch 可以复用 then 方法。
+
+不管是 resolve 还是 reject 都会调用 finally 。那么相当于 fianlly 方法替使用者分别调用了一次 then 的 resolved 和 rejected 状态回调。
+
+#### Promise 的 6 个静态方法
+
+这 **6 个静态方法**可以总结成 **3** 对：
+
+- `all` 与 `allSettled` - 都是拿所有 `promise` 的结果，区别是某个 `promise` 失败是否会终止流程
+- `race` 与 `any` - 都是拿最先完成的 `promise` 的结果，区别同上
+- `resolve` 与 `reject` - 快速生成一个已经 `resolve` 或 `reject` 的 `promise`
+
+#### all
+
+**所有 promises 全部成功才算成功**，一个失败即返回失败的原因。 all 的作用我是这么记的：“all or nothing”，不成功便成仁。
+
+```js
+// iterable 可以是任何值
+// 返回： 一个 promise, result is the list of the results of the input，返回的 list 的顺序和 iterable 里的顺序一致
+
+let promise = Promise.all(iterable);
+```
+
+使用场景：适合我们需要所有 `promise` 都成功的场景，比如并行下载多个文件，每个文件都需要成功下载：
+
+```js
+let urls = [
+  "https://api.github.com/users/iliakan",
+  "https://api.github.com/users/remy",
+  "https://api.github.com/users/jeresig",
+];
+
+// fetch 返回一个 promise，所以 requests 是存储了 promise 的 list
+let requests = urls.map((url) => fetch(url));
+
+// fetch 所有 url，结果全部保存在 responses 中
+Promise.all(requests).then((responses) =>
+  responses.forEach((response) =>
+    console.log(`${response.url}: ${response.status}`)
+  )
+);
+```
+
+一个更复杂的业务场景，一次性调用三个接口，等拿到所有的结果后提取请求体：
+
+```js
+let names = ["iliakan", "remy", "jeresig"];
+
+let requests = names.map((name) =>
+  fetch(`https://api.github.com/users/${name}`)
+);
+
+Promise.all(requests)
+  .then((responses) => {
+    // responses 是 fetch 上面三个接口得到的所有结果，长这样 [responseA, responseB, responseC]
+
+    // 打印每个接口调用的 http 状态码
+    for (let response of responses) {
+      console.log(`${response.url}: ${response.status}`);
+    }
+
+    // 原封不动给到下游
+    return responses;
+  })
+  .then((responses) => {
+    // responses 长这样：[responseA, responseB, responseC]
+    return Promise.all(
+      // 把 responses 转成 a list of promises，用于提取请求体
+      responses.map((r) => {
+        // r.json() 返回一个 promise
+        return r.json();
+      })
+    );
+  })
+  .then((users) => {
+    // users 是从 response.json() 里提取的数据
+    users.forEach((user) => console.log(user.name));
+  });
+```
+
+如果任何一个 `promise` 失败，会立即调用 `catch` 回调函数，同时其他 `promise` 依旧在执行，只不过拿不到结果而已：
+
+```js
+Promise.all([
+  new Promise((resolve, reject) =>
+    setTimeout(() => resolve("我是拿不到结果"), 1000)
+  ),
+  new Promise((resolve, reject) =>
+    setTimeout(() => resolve("我也是拿不到结果"), 30000)
+  ),
+  new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error("出错啦")), 2000)
+  ),
+]).catch((error) => {
+  // Error: "出错啦"。同时另外两个 promise 会继续运行。
+  console.log(error);
+});
+```
+
+我们给到 `all` 的参数可以是任何类型的值。因为 `promise` 会进行**值穿透**
+
+```js
+Promise.all([1, 2, 3]).then(console.log); // 1, 2, 3
+```
+
+#### allSettled
+
+`settled` 中文意思是安定，我理解为不论 `promise` 是成功还是失败都算 `settled`，**某个 promise 失败也不影响流程，这是 allSettled 和 all 唯一的区别。**
+
+使用场景：通过接口拿多条用户信息，某个接口调用失败也不影响主流程。
+
+```js
+let urls = [
+  "https://api.github.com/users/iliakan",
+  "https://api.github.com/users/remy",
+  "https://no-such-url",
+];
+
+Promise.allSettled(urls.map((url) => fetch(url))).then((results) => {
+  // results is a list of promises
+  console.log(results);
+});
+
+// output
+// [
+//   {status: 'fulfilled', value: ...response...},
+//   {status: 'fulfilled', value: ...response...},
+//   {status: 'rejected', reason: ...error object...}
+// ]
+```
+
+`allSettled` 是比较新的方法，如果当前的浏览器不支持，我们可以利用 `Promise.all `实现 `allSettled`：
+
+```js
+if (!Promise.allSettledMyOwn) {
+  const rejectHandler = (reason) => ({ status: "rejected", reason });
+  const resolveHandler = (value) => ({ status: "fulfilled", value });
+
+  Promise.allSettledMyOwn = function (promises) {
+    const convertedPromises = promises.map((p) =>
+	  // 用 then 来兜住 error，抛出的 error 会被 rejectHandler 捕获，从而不终止 all 的流程
+      Promise.resolve(p).then(resolveHandler, rejectHandler)
+    );
+    return Promise.all(convertedPromises);
+  };
+}
+```
+
+#### race
+
+顾名思义，a list of promises 比赛，谁先 settled (成功失败都算 settled)，就拿到谁的结果。
+
+```js
+Promise.race([
+  new Promise((resolve, _) => setTimeout(() => resolve("我第二个完成"), 2000)),
+  new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("我是个错误，我最先完成")), 1000)
+  ),
+  new Promise((resolve, _) => setTimeout(() => resolve("我第三个完成"), 3000)),
+])
+  .then((v) => {
+    console.log(v);
+  })
+  .catch((err) => {
+    // 会走 catch 回调函数
+    console.log(err); // Error: 我是个错误，我最先完成
+  });
+```
+
+#### any
+
+如果中途有的 `promise` 失败了，不管它，**返回最先成功的 promise，这也是 any 和 race 唯一的区别**。如果都失败了，返回一个列表，存有所有 `promises` 的错误原因。
+
+#### resolve 和 reject
+
+快速生成一个已经 `resolved` 或 `reject` 的 `promise`
+
+### 29.2 源码实现分析
+
+#### all
+
+实现 `all` 的核心思路是返回一个新的 `promise` 并在这个 `promise` 里面遍历所有的 promises。
+
+注意点
+
+- 要考虑参数不是 `Promise` 类型的情况
+- 为了能让返回值的顺序和给到的 `promises array `的顺序一致，不能用 `for loop` 的 `i` 直接判断是否已经遍历完成(如果最后一个 `promise` 最先完成会直接结束)
+
+```js
+Promise.myAll = function (arr) {
+  // 获取总数
+  const total = arr.length;
+  // 已经处理过的 promise 数量
+  let count = 0;
+  // 初始化 list，用来存所有 promise 的结果
+  const results = new Array(total);
+  // 因为返回的是一个新 promise，所以 new promise 并在其 executor 中遍历所有 arr
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < total; i++) {
+      // arr[i] 不一定是 promise，所以统一用 Promise.resolve 包裹
+      // 如果 arr[i] 本身就是 promise，通过 Promise.resolve 源码可知，Promise.resolve 会直接返回这个 promise
+      Promise.resolve(arr[i])
+        .then((res) => {
+          // 可以看出返回的 result list 顺序和给的 promise list 一致
+          results[i] = res;
+          count++;
+          if (count === total) {
+            // 如果全部的 promises 都成功了，resolve 这个新的 promise，把结果传给下游
+            resolve(results);
+          }
+        })
+        .catch((err) => {
+          // 如果有一个 promise 失败了就会走这个回调，
+          // 可以看到，就算某个 promise 失败了，也不会停止其他 promise
+          reject(err); // reject 这个 promise，把结果传给下游
+        });
+    }
+  });
+};
+
+// ==== 用例 ====
+const arr = [
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(1);
+    }, 2000);
+  }),
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(3);
+      // reject("nono");
+    }, 1000);
+  }),
+];
+
+Promise.myAll(arr).then(console.log, console.log);
+// Promise.all(arr).then(console.log, console.log);
+```
+
+#### allSettled
+
+`allSettled` 和 `all` 功能非常相似，所以实现也和相似：
+
+```js
+Promise.myAllSettled = function (arr) {
+  const total = arr.length;
+  let count = 0;
+  const results = new Array(total);
+  return new Promise((resolve, _) => {
+    for (let i = 0; i < total; i++) {
+      Promise.resolve(arr[i])
+        .then((res) => {
+          results[i] = {
+            status: "fulfilled",
+            value: res,
+          };
+          count++;
+          if (count === total) {
+            resolve(results);
+          }
+        })
+        .catch((err) => {
+          // 唯一和 all 方法不同的地方，这里不结束 promise，而是继续遍历
+          // all 方法这里是 reject(err);
+          results[i] = {
+            status: "rejected",
+            reason: err,
+          };
+          count++;
+          if (count === total) {
+            resolve(results); // 把结果通过 resolve 传给下游
+          }
+        });
+    }
+  });
+};
+
+// ==== 用例 ====
+const arr = [
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(1);
+    }, 2000);
+  }),
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // resolve(3);
+      reject("nono");
+    }, 1000);
+  }),
+];
+
+// Promise.allSettled(arr).then(console.log, console.log);
+Promise.myAllSettled(arr).then(console.log, console.log);
+```
+
+#### race
+
+```js
+Promise.myRace = function (arr) {
+  // 返回新的 promise，把结果通过链式调用传给下游
+  return new Promise((resolve, reject) => {
+    arr.forEach((item) => {
+      // item 可能不是 promise，用 Promise.resolve 包裹
+      Promise.resolve(item)
+        .then((value) => {
+          // 如果 item promise 成功，会走这个回调
+          // 立即结束 promise
+          resolve(value);
+        })
+        .catch((err) => {
+          // 如果 item promise 失败，会走这个回调
+          // 立即结束 promise
+          reject(err);
+        });
+    });
+  });
+};
+
+// ==== 用例 ====
+const arr = [
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve('我晚一点结束');
+    }, 2000);
+  }),
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve('我最早结束');
+    }, 1000);
+  }),
+];
+
+// Promise.myRace(arr).then(console.log, console.log);
+Promise.race(arr).then(console.log, console.log);
+```
+
+#### any
+
+`any` 和 `race` 的功能非常相似，实现也很相似：
+
+```js
+Promise.myAny = function (arr) {
+  return new Promise((resolve, reject) => {
+    arr.forEach((item) => {
+      Promise.resolve(item)
+        .then((value) => {
+          // 如果 item promise 成功，会走这个回调
+          // 立即结束 promise
+          resolve(value);
+        })
+        .catch((err) => {
+          // 不处理
+        });
+    });
+  });
+};
+
+// ==== 用例 ====
+const arr = [
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve("成功");
+    }, 2000);
+  }),
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject("nono");
+    }, 1000);
+  }),
+];
+
+Promise.myAny(arr).then(console.log, console.log);
+// Promise.any(arr).then(console.log, console.log);
+```
+
+#### resolve 和 reject
+
+resolve 和 reject 的实现很简单
+
+```js
+/**
+ * 创建一个已经 resolve 的 promise 并返回
+ * @param value 可能是任意值 也可能是 promise
+ * @returns promise
+ */
+Promise.myResolve = function (value) {
+  if (value instanceof Promise) {
+    return value;
+  }
+  return new Promise((resolve, _) => {
+    resolve(value);
+  });
+};
+
+/**
+ * 和 Promise.resolve 一样，创建一个已经 reject 的 promise 并返回
+ */
+Promise.myReject = function (reason) {
+  return new Promise((_, reject) => reject(reason));
+};
+```
+
