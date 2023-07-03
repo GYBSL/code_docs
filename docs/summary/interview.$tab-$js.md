@@ -3780,7 +3780,7 @@ obj1.a =  null
 
 ## 29. 深入理解
 
-### 29.1 Promise的实例方法和静态方法及 6 个静态方法
+### 1. Promise的实例方法和静态方法及 6 个静态方法
 
 #### Promise 的实例方法有 then、catch、finally 三种
 
@@ -3965,7 +3965,7 @@ Promise.race([
 
 快速生成一个已经 `resolved` 或 `reject` 的 `promise`
 
-### 29.2 Promise 的 6 个静态方法的源码实现分析
+### 2. Promise 的 6 个静态方法的源码实现分析
 
 #### all
 
@@ -4191,3 +4191,175 @@ Promise.myReject = function (reason) {
 };
 ```
 
+### 3. js 数组去重的方法
+
+- 利用扩展运算符和 `new Set()` 去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  
+  console.log([...new Set(arr)])
+  [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用`includes`去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  let newArr=[];
+  
+  arr.forEach(item=>{
+      if(!newArr.includes(item)){
+          newArr.push(item);
+  	}
+  })
+  
+  console.log(newArr)	// [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用`map`去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  let newArr=[];
+  let map=new Map();
+  
+  arr.forEach(item=>{
+      if(!map.has(item)){
+          newArr.push(item);
+          map.set(item,1);
+      }
+  })
+  
+  console.log(newArr)	// [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用 `indexOf` 去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  let newArr=[];
+  
+  arr.forEach(item=>{
+      if(newArr.indexOf(item)===-1){
+          newArr.push(item);
+      }
+  })
+  
+  console.log(newArr)	// [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用单层 `for` 循环+`sort()`+`splice()`去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  
+  for(let i=0;i<arr.sort().length;i++){
+      if(arr[i]==arr[i+1]){
+          arr.splice(i,1);
+          i--;
+      }
+  }
+  
+  console.log(arr)	// [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用双层`for`循环+`sort()`+`splice()`去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  
+  for(let i=0;i<arr.sort().length;i++){
+      for(let j=i+1;j<arr.sort().length;j++){
+          if(arr[i]==arr[j]){
+              arr.splice(i,1);
+              j--;
+          }
+      }
+  }
+  
+  console.log(arr)	// [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用递归去重
+
+  ```javascript
+  let arr=[2,3,4,3,3,4,5,6,1,2,0];
+  
+  function callback(index) {
+    if (index > 0) {
+      if (arr[index] == arr[index - 1]) {
+        arr.splice(index, 1);
+      }
+      callback(index - 1);
+    }
+  }
+  
+  callback(arr.sort().length-1)
+  console.log(arr)	// [2, 3, 4, 5, 6, 1, 0]
+  ```
+
+- 利用`filter`和`map`对象数组去重 （性能较高）
+
+  ```javascript
+  let map = new Map()
+  let arr = [
+      {
+          name: '好先森1',
+          id: 1
+      },
+      {
+          name: '好先森1',
+          id: 2
+      },
+      {
+          name: '好先森2',
+          id: 3
+      },
+      {
+          name: '好先森3',
+          id: 3
+      }
+  ]
+  
+  // 对象数组去重
+  function fn(arr, key) {
+          return arr.filter(item => !map.has(item[key].toString()) && map.set(item[key].toString()))
+  }
+      
+  console.log(fn(arr, 'id'));
+  ```
+
+- 利用 `filter` 和 `includes` 对象数组去重
+
+  ```javascript
+  let arr = [
+      {
+          name: '好先森1',
+          id: 1
+      },
+      {
+          name: '好先森1',
+          id: 2
+      },
+      {
+          name: '好先森2',
+          id: 3
+      },
+      {
+          name: '好先森3',
+          id: 3
+      }
+  ]
+      
+  function fn(arr) {
+          let newArr = [];
+          return arr.filter((item) => !newArr.includes(item.name) && newArr.push(item.name))
+  }
+      
+  console.log(fn(arr));
+  ```
+
+  
+
+  
