@@ -1625,7 +1625,7 @@ Array.from(arrayLike);
     console.log(arr.includes(2));	// true
     ```
 
-  -  join方法
+  - join方法
 
     join() 方法将一个数组（或一个类数组对象）的所有元素连接成一个字符串并返回这个字符串, 默认不传参数就用“,”作为连接符，不会改变原数组。
 
