@@ -1589,12 +1589,199 @@ Array.from(arrayLike);
 ### 9. 数组有哪些原生方法？
 
 - 数组和字符串的转换方法：toString()、toLocalString()、join() 其中 join() 方法可以指定转换为字符串时的分隔符。
+
 - 数组尾部操作的方法 pop() 和 push()，push 方法可以传入多个参数。
+
 - 数组首部操作的方法 shift() 和 unshift() 重排序的方法 reverse() 和 sort()，sort() 方法可以传入一个函数来进行比较，传入前后两个值，如果返回值为正数，则交换两个参数的位置。
+
 - 数组连接的方法 concat() ，返回的是拼接好的数组，不影响原数组。
+
 - 数组截取办法 slice()，用于截取数组中的一部分返回，不影响原数组。
+
 - 数组插入方法 splice()，影响原数组查找特定项的索引的方法，indexOf() 和 lastIndexOf() 迭代方法 every()、some()、filter()、map() 和 forEach() 方法
+
 - 数组归并方法 reduce() 和 reduceRight() 方法
+
+- js数组常用方法总结
+
+  - push() 方法
+
+    push() 方法将一个或多个元素添加到数组的末尾，并返回该数组的新长度, 会改变原数组。
+
+  - sort() 方法
+
+    sort() 方法用原地算法对数组的元素进行排序，并返回数组。排序算法现在是稳定的。默认排序顺序是根据字符串Unicode码点, 会改变原数组。
+
+    ```javascript
+    arr.sort((a, b) => a - b);// a-b是升序，b-a是降序
+    ```
+
+  - indexOf() 方法
+
+    indexOf()方法返回在数组中可以找到一个给定元素的第一个索引，如果不存在，则返回-1，不会改变原数组。
+
+    ```javascript
+    var arr = ['ant', 'bison', 'camel', 'duck', 'bison'];
+    console.log(arr.indexOf('bison')); // 返回下标1
+    ```
+
+  - includes() 方法
+
+    includes() 方法用来判断一个数组是否包含一个指定的值，根据情况，如果包含则返回 true，否则返回false，不会改变原数组。
+
+    ```javascript
+    var arr = [1, 2, 3];
+    console.log(arr.includes(2));	// true
+    ```
+
+  - isArray()方法
+
+    Array.isArray() 用于确定传递的值是否是一个 Array
+
+    ```javascript
+    Array.isArray([1, 2, 3]);  
+    // true
+    
+    Array.isArray({foo: 123}); 
+    // false
+    
+    Array.isArray("foobar");   
+    // false
+    
+    Array.isArray(undefined);  
+    // false
+    ```
+
+  -  join方法
+
+    join() 方法将一个数组（或一个类数组对象）的所有元素连接成一个字符串并返回这个字符串
+
+    默认不传参数就用“,”作为连接符，不会改变原数组。
+
+    ```javascript
+    var elements = ['Fire', 'Wind', 'Rain'];
+    
+    console.log(elements.join());
+    // Fire,Wind,Rain
+    
+    console.log(elements.join(''));
+    // FireWindRain
+    
+    console.log(elements.join('-'));
+    // Fire-Wind-Rain
+    ```
+
+  - pop() 方法
+
+    pop() 方法从数组中删除最后一个元素，并返回被删除元素的值。此方法更改数组的长度，会改变原数组。
+
+    ```javascript
+    var plants = ['broccoli', 'cauliflower', 'cabbage', 'kale', 'tomato'];
+    
+    console.log(plants.pop());
+    // "tomato"
+    
+    console.log(plants);
+    // Array ["broccoli", "cauliflower", "cabbage", "kale"]
+    
+    plants.pop();
+    
+    console.log(plants);
+    // Array ["broccoli", "cauliflower", "cabbage"]
+    ```
+
+  - reverse() 方法
+
+    reverse() 方法将数组中元素的位置颠倒。第一个数组元素成为最后一个数组元素，最后一个数组元素成为第一个, 会改变原数组。
+
+    ```javascript
+    var array1 = ['one', 'two', 'three'];
+    console.log('array1: ', array1);
+    // Array ['one', 'two', 'three']
+    
+    var reversed = array1.reverse(); 
+    console.log('reversed: ', reversed);
+    // Array ['three', 'two', 'one']
+    
+    /* 会改变原来的数组 */ 
+    console.log('array1: ', array1);
+    // Array ['three', 'two', 'one']
+    ```
+
+  - shift() 方法
+
+    shift() 方法从数组中删除第一个元素，并返回被删除元素的值，会改变原数组。
+
+    ```javascript
+    var array1 = [1, 2, 3];
+    
+    var firstElement = array1.shift();
+    
+    console.log(array1);
+    // Array [2, 3]
+    
+    console.log(firstElement);
+    // 1
+    ```
+
+  - unshift() 方法
+
+    unshift() 方法将一个或多个元素添加到数组的开头，并返回该数组的新长度，会改变原数组。
+
+    ```javascript
+    var array1 = [1, 2, 3];
+    
+    console.log(array1.unshift(4, 5));
+    // 5
+    
+    console.log(array1);
+    // Array [4, 5, 1, 2, 3]
+    ```
+
+  - slice() 方法
+
+    slice() 方法返回一个新的数组对象，这一对象是一个由 开始和 结束（不包括结束, 包头不包尾）决定的原数组的浅拷贝。不会改变原数组。
+
+    ```javascript
+    var animals = ['ant', 'bison', 'camel', 'duck', 'elephant'];
+    
+    console.log(animals.slice(2));
+    // Array ["camel", "duck", "elephant"]
+    
+    console.log(animals.slice(2, 4));
+    // Array ["camel", "duck"]
+    
+    console.log(animals.slice(1, 5));
+    // Array ["bison", "camel", "duck", "elephant"]
+    ```
+
+  - splice() 方法
+
+    splice() 方法通过删除现有元素或添加新元素来修改数组, 并以数组返回原数组中被修改的内容，会改变原数组。
+
+    ```javascript
+    var months = ['Jan', 'March', 'April', 'June'];
+    months.splice(1, 0, 'Feb');
+    // 插入第一个索引位置, 纯添加不删除元素
+    console.log(months);
+    // Array ['Jan', 'Feb', 'March', 'April', 'June']
+    
+    months.splice(4, 1, 'May');
+    // 替换第4索引处的1个元素
+    console.log(months);
+    // Array ['Jan', 'Feb', 'March', 'April', 'May']
+    ```
+
+  - toString() 方法
+
+    toString() 返回一个字符串，表示指定的数组及其元素。
+
+    ```javascript
+    var array1 = [1, 2, 'a', '1a'];
+    
+    console.log(array1.toString());
+    // "1,2,a,1a"
+    ```
 
 ### 10. **Unicode、UTF-8、UTF-16、UTF-32的区别？**
 
@@ -3619,7 +3806,7 @@ Promise.race([
 
 快速生成一个已经 `resolved` 或 `reject` 的 `promise`
 
-### 29.2 源码实现分析
+### 29.2 Promise 的 6 个静态方法的源码实现分析
 
 #### all
 
