@@ -47,3 +47,19 @@ git submodule foreach git pull 拉取所有子模块
 ```
 
 关于git submodule的不错的文章：[Git--子模块（submodule）介绍_git submodule_worthsen的博客-CSDN博客](https://blog.csdn.net/qq_38880380/article/details/123288706)
+
+## 3. Git 常用命令
+
+```bash
+git branch #显示本地所有分支，分支名前面有*号的代表当前正处于哪个分支
+git branch -v #查看本地分支+上次提交的信息
+git branch -vv #查看本地分支+上次提交的信息+本地和远程分支的关系
+git branch -vv -a #查看本地分支+上次提交的信息+本地和远程分支的关系+远程分支，如果不想显示提交的信息，也可以去掉-vv参数
+git branch -r #只查看远程分支
+git branch -d (branchName) #删除本地分支
+git checkout (branchName) #切换本地分支
+git branch (branchName) #创建本地分支
+git checkout -b (branchName) #创建本地分支并切换
+git branch -m (new-branch-name) #更改分支名称
+```
+
