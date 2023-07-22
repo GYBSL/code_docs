@@ -48,7 +48,7 @@ git submodule foreach git pull 拉取所有子模块
 
 关于git submodule的不错的文章：[Git--子模块（submodule）介绍_git submodule_worthsen的博客-CSDN博客](https://blog.csdn.net/qq_38880380/article/details/123288706)
 
-## 3. Git 常用命令
+## 3. Git 常用命令及规范
 
 ```bash
 git branch #显示本地所有分支，分支名前面有*号的代表当前正处于哪个分支
@@ -61,5 +61,23 @@ git checkout (branchName) #切换本地分支
 git branch (branchName) #创建本地分支
 git checkout -b (branchName) #创建本地分支并切换
 git branch -m (new-branch-name) #更改分支名称
+```
+
+```bash
+commit 提交信息规范∶
+	feat: 添加了个很棒的功能
+	fix: 修复了一些bug
+    docs: 更新了一下文档
+    chore: 对脚手架做了些更改
+    locale: 为国际化做了微小的贡献. module :新增了一个很牛逼的模块
+    del: 删除了一些垃圾代码
+    style: 格式(不影响代码运行的变动)refactor:重构（即不是新增功能，也不是修改bug的代码变动)
+    perf: 优化相关，比如提升性能、体验
+    chore: 构建过程或辅助工具的变动
+    revert: 回滚到上一个版本
+    merge: 代码合并
+    sync: 同步主线或分支的Bug
+    
+<类型>: <内容> 冒号后面有空格
 ```
 
