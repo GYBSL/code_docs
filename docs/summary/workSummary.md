@@ -1,5 +1,5 @@
 ---
-title: 工作总结
+title: 工作所学
 order: 4
 toc: content
 group: 
