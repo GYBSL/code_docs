@@ -1399,3 +1399,789 @@ getLength(1)//这个时候我们这样使用就会提示我们类型"number"的�
 //我们依次对数组、字符串、布尔值都进行尝试，分别为可以、可以、不可以
 ```
 
+## 24. 泛型约束|泛型类
+
+### 使用 keyof 约束对象
+
+其中使用了 TS 泛型和泛型约束。
+
+首先定义了 T 类型并使用 extends 关键字继承 object 类型的子类型，然后使用 keyof 操作符获取 T 类型的所有键，它的返回 类型是联合类型，最后利用 extends 关键字约束 K 类型必须为 keyof T 联合类型的子类型
+
+```typescript
+function prop<T, K extends keyof T>(obj: T, key: K) {
+    return obj[key]
+}
+
+let o = { a: 1, b: 2, c: 3 }
+prop(o, 'a')
+prop(o, 'd')
+// 我们需要约束一下这个o里面并没有的东西，此时就会报错发现找不到
+// 通过提示，我门可以看到类型"d"的参数不能赋给类型"a"|"b"|"c"的参数
+```
+
+### 泛型类
+
+声明方法跟函数类似名称后面定义 <类型> 
+
+使用的时候确定类型 new Sub()
+
+```typescript
+//定义泛型的一个类
+class Sub<T>{
+    attr:T[] = []//这里的:只是普通的:
+    add(a:T):T[]{
+        return [a]
+    }
+}
+
+let s = new Sub<number>()//这里已经使用泛型固定为number了
+s.attr = [123]//正常运行
+s.attr = ['123']//报错
+s.add(123)//也是只能传数字
+
+let str = new Sub<string>()//这里已经使用泛型固定为number了
+str.attr = [123]//报错
+str.attr = ['123']//正常运行
+str.add('123')//也是只能传字符串
+console.log(s,str)
+```
+
+### 泛型工具类型(大量补充额外内容)
+
+为了方便开发者 TypeScript 内置了一些常用的工具类型，比如 Partial、Required、Readonly、Record 和 ReturnType 等。不过在具体介绍之前，我们得先介绍一些相关的基础知识，方便读者可以更好的学习其它的工具类型。
+
+1. **typeof**
+
+   typeof 的主要用途是在类型上下文中获取变量或者属性的类型，下面我们通过一个具体示例来理解一 下。
+
+   ```typescript
+   interface Person {
+       name: string;
+       age: number;
+   }
+   
+   const sem: Person = { name: "semlinker", age: 30 };
+   type Sem = typeof sem; // type Sem = Person
+   ```
+
+   在上面代码中，我们通过 typeof 操作符获取 sem 变量的类型并赋值给 Sem 类型变量，之后我们就可以使用 Sem 类型：
+
+   ```typescript
+   const lolo: Sem = { name: "lolo", age: 5 }
+   ```
+
+   你也可以对嵌套对象执行相同的操作：
+
+   ```typescript
+   const Message = {
+       name: "jimmy",
+       age: 18,
+       address: {
+           province: '四川',
+           city: '成都'
+       }
+   }
+   
+   type message = typeof Message;
+   /*
+   type message = {
+       name: string;
+       age: number;
+       address: {
+           province: string;
+           city: string;
+       };
+   }
+   */
+   ```
+
+   此外， typeof 操作符除了可以获取对象的结构类型之外，它也可以用来获取函数对象的类型，比如：
+
+   ```typescript
+   function toArray(x: number): Array<number> {
+       return [x];
+   }
+   
+   type Func = typeof toArray; // -> (x: number) => number[]
+   ```
+
+2. **keyof**
+
+   keyof 操作符是在 TypeScript 2.1 版本引入的，该操作符可以用于获取某种类型的所有键，其返回类型是联合类型。
+
+   ```typescript
+   interface Person {
+       name: string;
+       age: number;
+   }
+   
+   type K1 = keyof Person; // "name" | "age"
+   type K2 = keyof Person[]; 
+   // "length" | "toString" | "pop" | "push" | "concat" | "join"
+   type K3 = keyof { [x: string]: Person }; // string | number
+   ```
+
+   在 TypeScript 中支持两种索引签名，数字索引和字符串索引：
+
+   ```typescript
+   interface StringArray {
+       // 字符串索引 -> keyof StringArray => string | number
+       [index: string]: string;
+   }
+   
+   interface StringArray1 {
+       // 数字索引 -> keyof StringArray1 => number
+       [index: number]: string;
+   }
+   ```
+
+   为了同时支持两种索引类型，就得要求数字索引的返回值必须是字符串索引返回值的子类。
+
+   其中的原因就是当使用数值索引时，JavaScript 在执行索引操作时，会先把数值索引先转换为字符串索引。
+
+   所以 keyof { [x: string]: Person } 的结果会返回 string | number 。
+
+   keyof 也支持基本数据类型：
+
+   ```typescript
+   let K1: keyof boolean; // let K1: "valueOf"
+   let K2: keyof number; // let K2: "toString" | "toFixed" | "toExponential" | ...
+   let K3: keyof symbol; // let K1: "valueOf"
+   ```
+
+   **keyof 的作用**
+
+   JavaScript 是一种高度动态的语言。有时在静态类型系统中捕获某些操作的语义可能会很棘手。以一个 简单的 prop 函数为例：
+
+   ```typescript
+   function prop(obj, key) {
+       return obj[key];
+   }
+   ```
+
+   该函数接收 obj 和 key 两个参数，并返回对应属性的值。对象上的不同属性，可以具有完全不同的类型，我们甚至不知道 obj 对象长什么样。
+
+   那么在 TypeScript 中如何定义上面的 prop 函数呢？我们来尝试一下：
+
+   ```typescript
+   function prop(obj: object, key: string) {
+       return obj[key];
+   }
+   ```
+
+   在上面代码中，为了避免调用 prop 函数时传入错误的参数类型，我们为 obj 和 key 参数设置了类型， 分别为 {} 和 string 类型。
+
+   然而，事情并没有那么简单。针对上述的代码，TypeScript 编译器会输出 以下错误信息：
+
+   ```typescript
+   Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+   ```
+
+   元素隐式地拥有 any 类型，因为 string 类型不能被用于索引 {} 类型。要解决这个问题，你可以使 用以下非常暴力的方案：
+
+   ```typescript
+   function prop(obj: object, key: string) {
+       return (obj as any)[key];
+   }
+   ```
+
+   很明显该方案并不是一个好的方案，我们来回顾一下 prop 函数的作用，该函数用于获取某个对象中指 定属性的属性值。因此我们期望用户输入的属性是对象上已存在的属性，那么如何限制属性名的范围呢？这时我们可以利用本文的主角 keyof 操作符：
+
+   ```typescript
+   function prop<T extends object, K extends keyof T>(obj: T, key: K) {
+       return obj[key];
+   }
+   ```
+
+   在以上代码中，我们使用了 TypeScript 的泛型和泛型约束。
+
+   首先定义了 T 类型并使用 extends 关键字 约束该类型必须是 object 类型的子类型，然后使用 keyof 操作符获取 T 类型的所有键，其返回类型是 联合类型，最后利用 extends 关键字约束 K 类型必须为 keyof T 联合类型的子类型。 是骡子是马拉 出来遛遛就知道了，我们来实际测试一下：
+
+   ```typescript
+   type Todo = {
+       id: number;
+       text: string;
+       done: boolean;
+   }
+   const todo: Todo = {
+       id: 1,
+       text: "Learn TypeScript keyof",
+       done: false
+   }
+   function prop<T extends object, K extends keyof T>(obj: T, key: K) {
+       return obj[key];
+   }
+   const id = prop(todo, "id"); // const id: number
+   const text = prop(todo, "text"); // const text: string
+   const done = prop(todo, "done"); // const done: boolean
+   ```
+
+   很明显使用泛型，重新定义后的 prop(obj: T, key: K) 函数，已经可以正确地推导出指定键对应的类型。那么当访问 todo 对象上不存在的属性时，会出现什么情况？比如：
+
+   ```typescript
+   const date = prop(todo, "date");
+   ```
+
+   对于上述代码，TypeScript 编译器会提示以下错误：
+
+   ```typescript
+   Argument of type '"date"' is not assignable to parameter of type '"id" | "text" | "done"'.
+   ```
+
+   这就阻止我们尝试读取不存在的属性
+
+3. **in**
+
+   in 用来遍历枚举类型：
+
+   ```typescript
+   type Keys = "a" | "b" | "c"
+   type Obj = {
+       [p in Keys]: any
+   } // -> { a: any, b: any, c: any }
+   ```
+
+4. **infer**
+
+   在条件类型语句中，可以用 infer 声明一个类型变量并且对它进行使用。
+
+   ```typescript
+   type ReturnType<T> = T extends (...args: any[]) => infer R ? R : any;
+   ```
+
+   以上代码中 infer R 就是声明一个变量来承载传入函数签名的返回值类型，简单说就是用它取到函数 返回值的类型方便之后使用。
+
+5. **extends**
+
+   有时候我们定义的泛型不想过于灵活或者说想继承某些类等，可以通过 extends 关键字添加泛型约束。
+
+   ```typescript
+   interface Lengthwise {
+       length: number;
+   }
+   function loggingIdentity<T extends Lengthwise>(arg: T): T {
+       console.log(arg.length);
+       return arg;
+   }
+   ```
+
+   现在这个泛型函数被定义了约束，因此它不再是适用于任意类型：
+
+   ```typescript
+   loggingIdentity(3); // Error, number doesn't have a .length property
+   ```
+
+   这时我们需要传入符合约束类型的值，必须包含 length 属性：
+
+   ```typescript
+   loggingIdentity({length: 10, value: 3});
+   ```
+
+6. **索引类型**
+
+   在实际开发中，我们经常能遇到这样的场景，在对象中获取一些属性的值，然后建立对应的集合。
+
+   ```typescript
+   let person = {
+       name: 'musion',
+       age: 35
+   }
+   function getValues(person: any, keys: string[]) {
+       return keys.map(key => person[key])
+   }
+   console.log(getValues(person, ['name', 'age'])) // ['musion', 35]
+   console.log(getValues(person, ['gender'])) // [undefined]
+   ```
+
+   在上述例子中，可以看到 getValues (persion, ['gender']) 打印出来的是 [undefined]，但是 ts 编译器并没有给出报错信息，那么如何使用 ts 对这种模式进行类型约束呢？这里就要用到了索引类型，改造一下 getValues 函数，通过 索引类型查询和 索引访问操作符：
+
+   ```typescript
+   function getValues<T, K extends keyof T>(person: T, keys: K[]): T[K][] {
+       return keys.map(key => person[key]);
+   }
+   
+   interface Person {
+       name: string;
+       age: number;
+   }
+   
+   const person: Person = {
+       name: 'musion',
+       age: 35
+   }
+   
+   getValues(person, ['name']) // ['musion']
+   getValues(person, ['gender']) // 报错：
+   // Argument of Type '"gender"[]' is not assignable to parameter of type '("name" | "age")[]'.
+   // Type "gender" is not assignable to type "name" | "age".
+   ```
+
+   编译器会检查传入的值是否是 Person 的一部分。通过下面的概念来理解上面的代码：
+
+   ```typescript
+   T[K]表示对象T的属性K所表示的类型，在上述例子中，T[K][] 表示变量T取属性K的值的数组
+   // 通过[]索引类型访问操作符, 我们就能得到某个索引的类型
+   class Person {
+       name:string;
+       age:number;
+   }
+   type MyType = Person['name']; //Person中name的类型为string type MyType = string
+   ```
+
+   介绍完概念之后，应该就可以理解上面的代码了。首先看泛型，这里有 T 和 K 两种类型，根据类型推 断，第一个参数 person 就是 person，类型会被推断为 Person。而第二个数组参数的类型推断（K extends keyof T），keyof 关键字可以获取 T，也就是 Person 的所有属性名，即 ['name', 'age']。而 extends 关键字让泛型 K 继承了 Person 的所有属性名，即 ['name', 'age']。这三个特性组合保证了代码 的动态性和准确性，也让代码提示变得更加丰富了
+
+   ```typescript
+   getValues(person, ['gender']) // 报错：
+   // Argument of Type '"gender"[]' is not assignable to parameter of type '("name"
+   | "age")[]'.
+   // Type "gender" is not assignable to type "name" | "age".
+   ```
+
+7. **映射类型**
+
+   根据旧的类型创建出新的类型，我们称之为映射类型
+
+   比如我们定义一个接口:
+
+   ```typescript
+   interface TestInterface{
+       name:string,
+       age:number
+   }
+   ```
+
+   我们把上面定义的接口里面的属性全部变成可选
+
+   ```typescript
+   // 我们可以通过+/-来指定添加还是删除
+   type OptionalTestInterface<T> = {
+       [p in keyof T]+?:T[p]
+   }
+   
+   type newTestInterface = OptionalTestInterface<TestInterface>
+   // type newTestInterface = {
+       // name?:string,
+       // age?:number
+   // }
+   ```
+
+   比如我们再加上只读
+
+   ```typescript
+   type OptionalTestInterface<T> = {
+       +readonly [p in keyof T]+?:T[p]
+   }
+   
+   type newTestInterface = OptionalTestInterface<TestInterface>
+   // type newTestInterface = {
+       // readonly name?:string,
+       // readonly age?:number
+   // }
+   ```
+
+   由于生成只读属性和可选属性比较常用，所以 TS 内部已经给我们提供了现成的实现 Readonly / Partial, 会面内置的工具类型会介绍.
+
+#### 内置的工具类型
+
+1. **Partial**
+
+   Partial 将类型的属性变成可选
+
+   ```typescript
+   type Partial<T> = {
+       [P in keyof T]?: T[P];
+   };
+   ```
+
+   在以上代码中，首先通过 keyof T 拿到 T 的所有属性名，然后使用 in 进行遍历，将值赋给 P ，最后通过 T[P] 取得相应的属性值的类。中间的 ? 号，用于将所有属性变为可选。
+
+   ```typescript
+   interface UserInfo {
+       id: string;
+       name: string;
+   }
+   // error：Property 'id' is missing in type '{ name: string; }' but required in
+   type 'UserInfo'
+   const xiaoming: UserInfo = {
+       name: 'xiaoming'
+   }
+   ```
+
+   使用 Partial：
+
+   ```typescript
+   type NewUserInfo = Partial<UserInfo>;
+   const xiaoming: NewUserInfo = {
+       name: 'xiaoming'
+   }
+   ```
+
+   这个 NewUserInfo 就相当于
+
+   ```typescript
+   interface NewUserInfo {
+       id?: string;
+       name?: string;
+   }
+   ```
+
+   但是 Partial 有个局限性，就是只支持处理第一层的属性，如果我的接口定义是这样的
+
+   ```typescript
+   interface UserInfo {
+       id: string;
+       name: string;
+       fruits: {
+           appleNumber: number;
+           orangeNumber: number;
+       }
+   }
+   type NewUserInfo = Partial<UserInfo>;
+   // Property 'appleNumber' is missing in type '{ orangeNumber: number; }' but required in type '{ appleNumber: number; orangeNumber: number; }'.
+   const xiaoming: NewUserInfo = {
+       name: 'xiaoming',
+       fruits: {
+           orangeNumber: 1,
+       }
+   }
+   ```
+
+   可以看到，第二层以后就不会处理了，如果要处理多层，就可以自己实现
+
+2. **DeepPartial**
+
+   ```typescript
+   type DeepPartial<T> = {
+       // 如果是 object，则递归类型
+       [U in keyof T]?: T[U] extends object
+       ? DeepPartial<T[U]>
+       : T[U]
+   };
+   type PartialedWindow = DeepPartial<T>; // 现在T上所有属性都变成了可选啦
+   ```
+
+3. **Required**
+
+   Required 将类型的属性变成必选
+
+   ```typescript
+   type Required<T> = {
+       [P in keyof T]-?: T[P]
+   };
+   ```
+
+   其中 -? 是代表移除 ? 这个 modifier 的标识。再拓展一下，除了可以应用于 ? 这个 modifiers ，还有 应用在 readonly ，比如 Readonly 这个类型
+
+   ```typescript
+   type Readonly<T> = {
+       readonly [p in keyof T]: T[p];
+   }
+   ```
+
+4. **Readonly**
+
+   Readonly 的作用是将某个类型所有属性变为只读属性，也就意味着这些属性不能被重新赋 值。
+
+   ```typescript
+   type Readonly<T> = {
+       readonly [P in keyof T]: T[P];
+   };
+   ```
+
+   ```typescript
+   interface Todo {
+       title: string;
+   }
+   const todo: Readonly<Todo> = {
+       title: "Delete inactive users"
+   };
+   todo.title = "Hello"; // Error: cannot reassign a readonly property
+   ```
+
+5. **Pick**
+
+   Pick 从某个类型中挑出一些属性出来
+
+   ```typescript
+   type Pick<T, K extends keyof T> = {
+       [P in K]: T[P];
+   };
+   ```
+
+   ```typescript
+   interface Todo {
+       title: string;
+       description: string;
+       completed: boolean;
+   }
+   type TodoPreview = Pick<Todo, "title" | "completed">;
+   const todo: TodoPreview = {
+       title: "Clean room",
+       completed: false,
+   };
+   ```
+
+   可以看到 NewUserInfo 中就只有个 name 的属性了。
+
+6. **Record**
+
+   Record 的作用是将 K 中所有的属性的值转化为 T 类型。
+
+   ```typescript
+   type Record<K extends keyof any, T> = {
+       [P in K]: T;
+   };
+   ```
+
+   ```typescript
+   interface PageInfo {
+       title: string;
+   }
+   type Page = "home" | "about" | "contact";
+   const x: Record<Page, PageInfo> = {
+       about: { title: "about" },
+       contact: { title: "contact" },
+       home: { title: "home" },
+   };
+   ```
+
+7. **ReturnType**
+
+   用来得到一个函数的返回值类型
+
+   ```typescript
+   type ReturnType<T extends (...args: any[]) => any> = T extends (...args: any[]) => infer R ? R : any;
+   ```
+
+   infer 在这里用于提取函数类型的返回值类型。 ReturnType 只是将 infer R 从参数位置移动到返 回值位置，因此此时 R 即是表示待推断的返回值类型。
+
+   ```typescript
+   type Func = (value: number) => string;
+   const foo: ReturnType<Func> = "1";
+   ```
+
+   ReturnType 获取到 Func 的返回值类型为 string ，所以， foo 也就只能被赋值为字符串了。
+
+8. **Exclude**
+
+   Exclude 的作用是将某个类型中属于另一个的类型移除掉。
+
+   ```typescript
+   type Exclude<T, U> = T extends U ? never : T;
+   ```
+
+   如果 T 能赋值给 U 类型的话，那么就会返回 never 类型，否则返回 T 类型。最终实现的效果就是将 T 中某些属于 U 的类型移除掉。
+
+   ```typescript
+   type T0 = Exclude<"a" | "b" | "c", "a">; // "b" | "c"
+   type T1 = Exclude<"a" | "b" | "c", "a" | "b">; // "c"
+   type T2 = Exclude<string | number | (() => void), Function>; // string | number
+   ```
+
+9. **Extract**
+
+   Extract 的作用是从 T 中提取出 U 。
+
+   ```typescript
+   type Extract<T, U> = T extends U ? T : never;
+   ```
+
+   ```typescript
+   type T0 = Extract<"a" | "b" | "c", "a" | "f">; // "a"
+   type T1 = Extract<string | number | (() => void), Function>; // () =>void
+   ```
+
+10. **Omit**
+
+    Omit 的作用是使用 T 类型中除了 K 类型的所有属性，来构造一个 新的类型。
+
+    ```typescript
+    type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+    ```
+
+    ```typescript
+    interface Todo {
+        title: string;
+        description: string;
+        completed: boolean;
+    }
+    
+    type TodoPreview = Omit<Todo, "description">;
+    const todo: TodoPreview = {
+        title: "Clean room",
+        completed: false,
+    };
+    ```
+
+11. **NonNullable**
+
+    NonNullable 的作用是用来过滤类型中的 null 及 undefined 类型。
+
+    ```typescript
+    type NonNullable<T> = T extendsnull | undefined ? never : T;
+    ```
+
+    ```typescript
+    type T0 = NonNullable<string | number | undefined>; // string | number
+    type T1 = NonNullable<string[] | null | undefined>; // string[]
+    ```
+
+12. **Parameters**
+
+    Parameters 的作用是用于获得函数的参数类型组成的元组类型。
+
+    ```typescript
+    type Parameters<T extends (...args: any) => any> = T extends (...args:infer P) => any ? P : never;
+    ```
+
+    ```typescript
+    type A = Parameters<() =>void>; // []
+    type B = Parameters<typeofArray.isArray>; // [any]
+    type C = Parameters<typeofparseInt>; // [string, (number | undefined)?]
+    type D = Parameters<typeofMath.max>; // number[]
+    ```
+
+## 25. tsconfig.json配置文件
+
+### 生成 tsconfig.json 文件
+
+这个文件是通过 tsc --init 命令生成的
+
+tsconfig.json 是 TypeScript 项目的配置文件。如果一个目录下存在一个 tsconfig.json 文件，那么 往往意味着这个目录就是 TypeScript 项目的根目录。
+
+tsconfig.json 包含 TypeScript 编译的相关配置，通过更改编译配置项，我们可以让 TypeScript 编 译出 ES6、ES5、node 的代码。
+
+### 配置详解
+
+```json
+"compilerOptions": {
+    "incremental": true, // TS编译器在第一次编译之后会生成一个存储编译信息的文件，第二次编译会在第一次的基础上进行增量编译，可以提高编译的速度
+    "tsBuildInfoFile": "./buildFile", // 增量编译文件的存储位置
+    "diagnostics": true, // 打印诊断信息
+    "target": "ES5", // 目标语言的版本
+    "module": "CommonJS", // 生成代码的模板标准
+    "outFile": "./app.js", // 将多个相互依赖的文件生成一个文件，可以用在AMD模块中，即开启时应设置"module": "AMD",
+    "lib": ["DOM", "ES2015", "ScriptHost", "ES2019.Array"], // TS需要引用的库，即声明文件，es5 默认引用dom、es5、scripthost,如需要使用es的高级版本特性，通常都需要配置，如es8的数组新特性需要引入"ES2019.Array",
+"allowJS": true, // 允许编译器编译JS，JSX文件
+"checkJs": true, // 允许在JS文件中报错，通常与allowJS一起使用
+"outDir": "./dist", // 指定输出目录
+"rootDir": "./", // 指定输出文件目录(用于输出)，用于控制输出目录结构
+"declaration": true, // 生成声明文件，开启后会自动生成声明文件
+"declarationDir": "./file", // 指定生成声明文件存放目录
+"emitDeclarationOnly": true, // 只生成声明文件，而不会生成js文件
+"sourceMap": true, // 生成目标文件的sourceMap文件
+"inlineSourceMap": true, // 生成目标文件的inline SourceMap，inline SourceMap会包含在生成的js文件中
+"declarationMap": true, // 为声明文件生成sourceMap
+"typeRoots": [], // 声明文件目录，默认时node_modules/@types
+"types": [], // 加载的声明文件包
+"removeComments":true, // 删除注释
+"noEmit": true, // 不输出文件,即编译后不会生成任何js文件
+"noEmitOnError": true, // 发送错误时不输出任何文件
+"noEmitHelpers": true, // 不生成helper函数，减小体积，需要额外安装，常配合importHelpers一起使用
+"importHelpers": true, // 通过tslib引入helper函数，文件必须是模块
+"downlevelIteration": true, // 降级遍历器实现，如果目标源是es3/5，那么遍历器会有降级的实现
+"strict": true, // 开启所有严格的类型检查
+"alwaysStrict": true, // 在代码中注入'use strict'
+"noImplicitAny": true, // 不允许隐式的any类型
+"strictNullChecks": true, // 不允许把null、undefined赋值给其他类型的变量
+"strictFunctionTypes": true, // 不允许函数参数双向协变
+"strictPropertyInitialization": true, // 类的实例属性必须初始化
+"strictBindCallApply": true, // 严格的bind/call/apply检查
+"noImplicitThis": true, // 不允许this有隐式的any类型
+"noUnusedLocals": true, // 检查只声明、未使用的局部变量(只提示不报错)
+"noUnusedParameters": true, // 检查未使用的函数参数(只提示不报错)
+"noFallthroughCasesInSwitch": true, // 防止switch语句贯穿(即如果没有break语句后面不会执行)
+"noImplicitReturns": true, //每个分支都会有返回值
+"esModuleInterop": true, // 允许export=导出，由import from 导入
+"allowUmdGlobalAccess": true, // 允许在模块中全局变量的方式访问umd模块
+"moduleResolution": "node", // 模块解析策略，ts默认用node的解析策略，即相对的方式导入
+"baseUrl": "./", // 解析非相对模块的基地址，默认是当前目录
+"paths": { // 路径映射，相对于baseUrl
+    // 如使用jq时不想使用默认版本，而需要手动指定版本，可进行如下配置
+    "jquery": ["node_modules/jquery/dist/jquery.min.js"]
+},
+"rootDirs": ["src","out"], // 将多个目录放在一个虚拟目录下，用于运行时，即编译后引入文件的位置可能发生变化，这也设置可以虚拟src和out在同一个目录下，不用再去改变路径也不会报错
+"listEmittedFiles": true, // 打印输出文件
+"listFiles": true// 打印编译的文件(包括引用的声明文件)
+}
+// 指定一个匹配列表（属于自动指定该路径下的所有ts相关文件）
+"include": [
+    "src/**/*"
+],
+// 指定一个排除列表（include的反向操作）
+"exclude": [
+    "demo.ts"
+],
+// 指定哪些文件使用该配置（属于手动一个个指定文件）
+"files": [
+    "demo.ts"
+]
+```
+
+上面的配置详解有点繁杂，我们或许可以将其分类一下
+
+#### 配置分类(compilerOptions 选项)
+
+```json
+{
+    "compilerOptions": {
+        /* 基本选项 */
+        "target": "es5", // 指定 ECMAScript 目标版本: 'ES3' (default), 'ES5', 'ES6'/'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'
+        "module": "commonjs", // 指定使用模块: 'commonjs', 'amd','system', 'umd' or 'es2015'
+        "lib": [], // 指定要包含在编译中的库文件
+        "allowJs": true, // 允许编译 javascript 文件
+        "checkJs": true, // 报告 javascript 文件中的错误
+        "jsx": "preserve", // 指定 jsx 代码的生成: 'preserve',
+        'react-native', or 'react'
+        "declaration": true, // 生成相应的 '.d.ts' 文件
+        "sourceMap": true, // 生成相应的 '.map' 文件
+        "outFile": "./", // 将输出文件合并为一个文件
+        "outDir": "./", // 指定输出目录
+        "rootDir": "./", // 用来控制输出目录结构 --outDir.
+        "removeComments": true, // 删除编译后的所有的注释
+        "noEmit": true, // 不生成输出文件
+        "importHelpers": true, // 从 tslib 导入辅助工具函数
+        "isolatedModules": true, // 将每个文件做为单独的模块 （与'ts.transpileModule' 类似）.
+        /* 严格的类型检查选项 */
+        "strict": true, // 启用所有严格类型检查选项
+        "noImplicitAny": true, // 在表达式和声明上有隐含的 any类型时报错
+        "strictNullChecks": true, // 启用严格的 null 检查
+        "noImplicitThis": true, // 当 this 表达式值为 any 类型的时候，生成一个错误
+        "alwaysStrict": true, // 以严格模式检查每个模块，并在每个文件里加入'use strict'
+        /* 额外的检查 */
+        "noUnusedLocals": true, // 有未使用的变量时，抛出错误
+        "noUnusedParameters": true, // 有未使用的参数时，抛出错误
+        "noImplicitReturns": true, // 并不是所有函数里的代码都有返回值时，抛出错误
+        "noFallthroughCasesInSwitch": true, // 报告 switch 语句的 fallthrough 错误。（即，不允许 switch 的 case 语句贯穿）
+        /* 模块解析选项 */
+        "moduleResolution": "node", // 选择模块解析策略： 'node' (Node.js) or 'classic' (TypeScript pre-1.6)
+        "baseUrl": "./", // 用于解析非相对模块名称的基目录
+        "paths": {}, // 模块名到基于 baseUrl 的路径映射的列表
+    "rootDirs": [], // 根文件夹列表，其组合内容表示项目运行时的结构内容
+    "typeRoots": [], // 包含类型声明的文件列表
+    "types": [], // 需要包含的类型声明文件名列表
+    "allowSyntheticDefaultImports": true, // 允许从没有设置默认导出的模块中默认导入。
+    /* Source Map Options */
+    "sourceRoot": "./", // 指定调试器应该找到 TypeScript 文件而不是源文件的位置
+    "mapRoot": "./", // 指定调试器应该找到映射文件而不是生成文件的位置
+    "inlineSourceMap": true, // 生成单个 soucemaps 文件，而不是将sourcemaps 生成不同的文件
+    "inlineSources": true, // 将代码与 sourcemaps 生成到一个文件中，要求同时设置了 --inlineSourceMap 或 --sourceMap 属性
+    /* 其他选项 */
+    "experimentalDecorators": true, // 启用装饰器
+    "emitDecoratorMetadata": true // 为装饰器提供元数据的支持
+}
+}
+```
+
+#### 常用的配置
+
+终端命令:
+
+```bash
+echo ''>index.ts(创建一个空的名叫index.ts的文件)
+tsc -init(创建一个tsconfig.json)
+del index.js(删除名叫index.js文件)
+mkdir dist(创建一个名叫dist的文件夹)
+tsc(运行)
+```
+
