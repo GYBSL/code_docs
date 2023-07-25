@@ -2185,3 +2185,1278 @@ mkdir dist(创建一个名叫dist的文件夹)
 tsc(运行)
 ```
 
+1. **include**
+
+   指定编译文件默认是编译当前目录下所有的 ts 文件
+
+   这个是在中括号中填入路径，路径指向的那个ts文件会被编译出一个js文件出来。这个我们就可以用来编译指定文件
+
+2. **exclude**
+
+   指定排除的文件
+
+   有些低配置的浏览器是不兼容es6的，这个时候我们就可以将其编译成es5使其适配
+
+3. **allowJS**
+
+   是否允许编译 js 文件
+
+   是否允许TypeScript帮你编译js文件，默认是不允许的
+
+4. **removeComments**
+
+   是否在编译过程中删除文件中的注释
+
+5. **rootDir**
+
+   编译文件的目录
+
+6. **outDir**
+
+   输出的目录
+
+   改变输出的目录，也就是编译后输出到这里设置的文件夹目录中
+
+7. **target**
+
+   指定编译 js 的版本例如 es5 es6
+
+   有些低配置的浏览器是不兼容es6的，这个时候我们就可以将其编译成es5使其适配
+
+8. **sourceMap**
+
+   代码源文件
+
+   这个文件会打包压缩成一行，sourceMap会记录行数，到时候会比较好找
+
+9. **strict**
+
+   严格模式
+
+10. **module**
+
+    默认 common.js 可选 es6 模式 amd umd 等
+
+**严格模式的限制**
+
+- 严格模式主要有以下限制：
+  - 变量必须声明后再使用
+  - 函数的参数不能有同名属性，否则报错
+  - 不能使用 with 语句 不能对只读属性赋值，否则报错
+  - 不能使用前缀 0 表示八进制数，否则报错
+  - 不能删除不可删除的属性，否则报错
+  - 不能删除变量 delete prop，会报错，只能删除属性 delete global [prop] 
+  - eval 不会在它的外层作用域引入变量 
+  - eval 和 arguments 不能被重新赋值
+  - arguments 不会自动反映函数参数的变化
+  - 不能使用 arguments.callee
+  - 不能使用 arguments.caller
+  - 禁止 this 指向全局对象
+  - 不能使用 fn.caller 和 fn.arguments 获取函数调用的堆栈
+  - 增加了保留字（比如 protected、static 和 interface）
+
+## 26. namespace命名空间
+
+我们在工作中无法避免 全局变量造成的污染，TypeScript 提供了 namespace 避免这个问题出现
+
+- 内部模块，主要用于组织代码，避免命名冲突。
+- 命名空间内的类默认私有
+- 通过 export 暴露
+- 通过 namespace 关键字定义
+
+TypeScript与 ECMAScript 2015 一样，任何包含顶级 import 或者 export 的文件都被当成一个模块。相反地，如果一个文件不带有顶级的 import 或者 export 声明，那么它的内容被视为全局可见的（因此对模块也是可见的）
+
+命名空间中通过 export 将想要暴露的部分导出
+
+如果不用 export 导出是无法读取其值的
+
+```typescript
+namespace a {
+    export const Time: number = 1000
+    export const fn = <T>(arg: T): T => {
+        return arg
+    }
+    fn(Time)
+}
+
+namespace b {
+    export const Time: number = 1000
+    export const fn = <T>(arg: T): T => {
+        return arg
+    }
+    fn(Time)
+}
+a.Time
+b.Time
+```
+
+例如：
+
+```typescript
+//文件1与文件2位于同一文件夹下
+//文件1 => index.ts
+const aa = 23
+//文件3 => index2.ts
+const aa = 66//此时就会报错，因为我们在文件1已经声明过aa了
+```
+
+```typescript
+//文件1 => index.ts
+namespace A{
+    export const aa =23
+    }
+//文件2 => index.ts
+namespace B{
+    export const aa =66
+    }//不会报错
+//要读取的话怎么做呢？此时在文件1
+console.log(A.a);//像使用对象一样。实际上也确实包了一层对象
+```
+
+实际编译成js文件的样子
+
+```typescript
+"use strict"
+var A;
+(function (A){
+    A.a = 1;
+})(A || (A ={}));
+console.log(A,a);
+//到此js文件所在目录下使用node index.js运行，输出1
+```
+
+### 嵌套命名空间
+
+就是提取内容的时候需要多.几次。比如下方，原本只需要a.b，现在需要a.b.value
+
+编译成js文件的话，就是在function又套了一层
+
+```typescript
+namespace a {
+    export namespace b {
+        export class Vue {
+            parameters: string
+            constructor(parameters: string) {
+                this.parameters = parameters
+            }
+        }
+    }
+}
+
+let v = a.b.Vue
+new v('1')
+```
+
+### 抽离命名空间
+
+将命名空间的内容抽离出来，通过import引入到其他文件中使用
+
+```typescript
+//在index2.ts文件下
+expost namespace B{
+    export const a = 2
+    }
+//在index.ts文件下
+import xx from './index2.ts'
+namespace A{
+    export namespace C{
+        export const D = 5
+        }
+}
+console.log(A.C.D,B)//将B抽离成了文件
+//将此文件用dsc进行终端编译，然后在tscondig.json将module修改为CommonJs(node.js不认识
+defined，node.js是基于CommonJS的)，进去js文件夹、终端运行node index
+```
+
+### 简化命名空间
+
+可以给命名空间路径起个名字，然后直接使用这个名字就可以代替命名空间路径了
+
+这个是不能够在ts-node的环境下去使用的
+
+```typescript
+//在index2.ts文件下
+expost namespace B{
+    export const a = 2
+}
+
+//在index.ts文件下
+import xx from './index2.ts'
+
+namespace A{
+    export namespace C{
+        export const D = 5
+        }
+}
+console.log(A.C.D,B)//将B抽离成了文件
+
+import AAA = A.C.D
+console.log(AAA)//起到跟A.C.D一样的作用
+import AAA = A.C
+console.log(AAA.D)//起到跟A.C.D一样的作用
+```
+
+### 命名空间的合并
+
+如果命名空间的命名一样的话(重名)，会自动合并
+
+```typescript
+//案例1
+namespace A{
+    export const b = 2
+}
+
+namespace A{
+    export const d = 3
+}
+
+//案例2
+namespace A{
+    export const b = 2
+    export const d = 3//案例1跟案例2是一模一样的，会自动合并
+}
+```
+
+## 27. 三斜线指令
+
+三斜线指令是包含单个 XML 标签的单行注释。 注释的内容会做为编译器指令使用。
+
+三斜线指令仅可放在包含它的文件的最顶端。 一个三斜线指令的前面只能出现单行或多行注释， 这包括其它的三斜线指令。 如果它们出现在一个语句或声明之后，那么它们会被当做普通的单行 注释，并且不具有特殊的涵义。
+
+`///`  指令是三斜线指令中最常见的一种。 它用于声明文件间的依赖。
+
+三斜线引用告诉 编译器 在编译过程中要引入的额外的文件。也可以认为是另一个import
+
+你也可以把它理解能 import ，它可以告诉编译器在编译过程中要引入的额外的文件
+
+相较于抽离命名空间。范围更广，将整个文件都抽离出来了。
+
+```typescript
+//在a.ts
+namespace A {
+    export const fn = () => 'a'
+    }
+//在b.ts
+namespace A {
+    export const fn2 = () => 'b'
+    }
+//在index.ts
+///<reference path="./index2.ts" />
+///<reference path="./index3.ts" />
+//引入之后直接可以使用变量 A
+console.log(A);
+```
+
+这个时候小满将outFile打开了，这个的作用是：将输出文件合并为一个文件，并编译到指定的路 径中
+
+这个时候样式的还在
+
+这个时候，我们再打开removeComments，他的作用是：删除编译后的所有的注释
+
+编译好后，那些样式就不在了
+
+### 引入声明文件
+
+例如，把 `///`  引入到声明文件，表明这个文件使用了 `@types/node/index.d.ts` 里面声明的名字； 并且，这个包需要在编译阶段与声明文件一起被包含进来。
+
+仅当在你需要写一个 d.ts 文件时才使用这个指令。
+
+使用的话，需要将声明文件装起来(npm install @types/node -D)
+
+```typescript
+///<reference types="node" />
+//这个node文件他会自己去找
+```
+
+## 28. 声明文件d.ts
+
+声明文件 declare
+
+当使用第三方库时，我们需要引用它的声明文件，才能获得对应的代码补全、接口提示等功能。
+
+```typescript
+declare var 声明全局变量
+declare function 声明全局方法
+declare class 声明全局类
+declare enum 声明全局枚举类型
+declare namespace 声明（含有子属性的）全局对象
+interface 和 type 声明全局类型
+/// <reference /> 三斜线指令
+```
+
+先：npm init -y
+
+npm init -y 在文件夹下生成默认的 package.json 文件，使用命令生成的 package.json 文件内容 与不使用命令生产的不一样
+
+后：npm install express -S 正式线安装
+
+npm install axios
+
+- 从node_modules的axios的package.json可以发现types:"index.d.ts"，可以发现声明文件已经被指定了
+
+  我们在去看index.d.ts文件可以看到最后通过declare将其导出了
+
+- 在引入使用的时候，发现express在引入的时候爆红了
+
+  同样的在node_nodules可以找到express中的package.json，发现他根本没有types，也就是 说没有指定声明文件。所以才会有爆红的这个问题
+
+  我们可以在根目录下创建一个express.d.ts文件
+
+  在文件中写入 declare var express:() => any
+
+  这个时候，我们在使用express的时候，就发现可以使用了 express() ，不会爆红了
+
+  另一种方法就是按照提示去装包，然后去tsconfig.json去导出一下"allowSyntheticDefaultImports":true 进行补全
+
+## 29. Mixins混入
+
+TypeScript 混入 Mixins 其实 vue 也有 mixins 这个东西 你可以把他看作为合并
+
+### 对象混入
+
+可以使用 ES6 的 Object.assign 合并多个对象
+
+此时 people 会被推断成一个交差类型 Name & Age & sex;
+
+**Object.assign()**
+
+- Object.assign () 这个方法来实现浅复制
+- 主要的用途是用来合并多个 JavaScript 的对象
+- Object.assign () 接口可以接收多个参数，第一个参数是目标对象，后面的都是源对象， assign方法将多个原对象的属性和方法都合并到了目标对象上面，如果在这个过程中出现同 名的属性（方法），后合并的属性（方法）会覆盖之前的同名属性（方法）
+- Object.assign 拷贝的属性是有限制的，只会拷贝对象本身的属性（不会拷贝继承属性），也 不会拷贝不可枚举的属性
+- Object.assign 不会跳过那些值为 [null] 或 [undefined] 的源对象
+
+```typescript
+interface Name {
+    name: string
+}
+interface Age {
+    age: number
+}
+interface Sex {
+    sex: number
+}
+let people1: Name = { name: "小满" }
+let people2: Age = { age: 20 }
+let people3: Sex = { sex: 1 }
+//Object.assign(a,b,c)
+const people = Object.assign(people1,people2,people3)
+```
+
+### 类的混入
+
+首先声明两个 mixins 类 （严格模式要关闭不然编译不过）
+
+```typescript
+//混入类
+class A{
+    type:boolean
+    changeType(){
+        this.type = !this.type
+    }
+}
+class B{
+    name:string
+    getName(){
+        return this.name
+    }
+}
+
+//实现类 首先应该注意到的是，没使用 extends 而是使用 implements。 把类当成了接口。我们可以这么做来达到目的，为将要 mixin 进来的属性方法创建出占位属性。 这告诉编译器这些成员在运行时是可用的。 这样就能使用 mixin 带来的便利，虽说需要提前定义一些占位属性
+class C implements A,B{
+    //这个时候编辑器会给出提示类"C"错误实现"A"。你是想扩展"A"并将其成员作为子继承吗？
+    //类型"C"缺少类型"A"中的以下属性:type,changeType
+    //B类同理
+    //这个时候就需要我们提前定义占位符
+    type:boolean = false;
+    name:string = "小余";
+    changeType:()=> void
+    getName:() => string
+}
+mixins(C,[A,B])//第一个为目标对象，后面为要混入的对象
+//最后，创建这个帮助函数，帮我们做混入操作。 它会遍历 mixins 上的所有属性，并复制到目标上去，把之前的占位属性替换成真正的实现代码
+//帮助函数，把我们在实现类中写的去进行一个实现
+function mixins (curClas:any,itemCls:any[]){
+    itemCls.forEach(item()=>{
+        console.log(item);//输出[class A][class B]，我们要读取的不是这个，而是他原型上的一些属性
+        Object.getOwnPropertyNames(item,prototype).forEach(name =>{
+            //Object.getOwnPropertyNames () 可以获取对象自身的属性，除去他继承来的属性，对它所有的属性遍历，它是一个数组，遍历一下它所有的属性名
+            console.log(name);//打印出来了changeType跟getName
+            curClas.prototype[name] = item.prototype[name]
+        })
+    })
+}
+let ccc = new C()//实例化一下
+console.log(ccc.type);//false
+ccc.changeType()//这里切换了布尔值
+console.log(ccc.type);//true
+```
+
+## 30. 装饰器Decorator
+
+Decorator 装饰器是一项实验性特性，在未来的版本中可能会发生改变
+
+它们不仅增加了代码的可读性，清晰地表达了意图，而且提供一种方便的手段，增加或修改类的功 能
+
+若要启用实验性的装饰器特性，你必须在 命令行 或 tsconfig.json 里启用 编译器 选项
+
+启用的名字叫 experimentalDecorators
+
+### 装饰器
+
+装饰器是一种特殊类型的声明，它能够被附加到类声明、方法、访问符、属性或者参数上
+
+通过 @ 语法糖实现
+
+使用方法：对于这个的实现我认为就是定义好了之后直接盖在你想对其使用目标的头顶上
+
+- 以下两个代码块的watcher都是不支持传参的
+
+  ```typescript
+  const watcher:ClassDecorator = (target:Function)=>{
+      console.log(target)
+  }
+  @watcher//通过@去使用，会回传一个构造函数，也就是target
+  class A{
+  }
+  //通过ts-node xxx打印出来的结果为[class A]
+  ```
+
+  ```typescript
+  const watcher:ClassDecorator = (target:Function)=>{
+      target.prototype.getName = <T>(name:T):T =>{
+          return name
+      }
+  }
+  @watcher
+  class A{
+  }
+  let a = new A()
+  a.getName()//会报类型"A"上不存在属性"getName"
+  //(<any>a).getName()//我们将其断言成any类型
+  console.log((<any>a).getName("小满深夜骑单车"))//对其进行使用，输出 小满深夜骑单车
+  @watcher
+  class B{
+  }
+  let b = new B()
+  console.log(b.getname('666'))//也是可以的
+  ```
+
+### 装饰器工厂
+
+支持传参的写法:
+
+我认为其实就是多了一层壳，这层壳用来接收@watcher的参数。里面return的那一层再用来接收 class A这个构造器
+
+其实也就是一个高阶函数 外层的函数接受值 里层的函数最终接受类的构造函数
+
+```typescript
+const watcher = (name=string):ClassDecorator =>{
+return (target:Function) =>{
+target.prototype.getNames = <T>(name:string):T =>{
+return name
+}
+target.prototype.getOptions = (): string => {
+return name
+}
+}
+@watcher("www")
+class A{
+}
+let a = new A()
+console.log((<any>a).getNames())//返回 www
+```
+
+### 装饰器组合
+
+就是可以使用多个装饰
+
+```typescript
+//装饰器组合组合
+const watcher = (name:string):ClassDecorator =>{
+    return (target:Function) =>{
+        target.prototype.getName = ()=>{
+            return name
+        }
+    }
+}
+
+const log:ClassDecorator = (target:Function) =>{
+    target.prototype.a = 213
+}
+@log
+@watcher('iii')
+class A{}
+```
+
+```typescript
+const watcher = (name: string): ClassDecorator => {
+    return (target: Function) => {
+        target.prototype.getParams = <T>(params: T): T => {
+            return params
+        }
+        target.prototype.getOptions = (): string => {
+            return name
+        }
+    }
+}
+const watcher2 = (name: string): ClassDecorator => {
+    return (target: Function) => {
+        target.prototype.getNames = ():string => {
+            return name
+        }
+    }
+}
+@watcher2('name2')
+@watcher('name')
+class A {
+    constructor() {
+    }
+}
+const a = new A();
+console.log((a as any).getOptions());
+console.log((a as any).getNames());
+```
+
+### 方法装饰器
+
+返回三个参数
+
+1. 对于静态成员来说是类的构造函数，对于实例成员是类的原型对象。
+2.  成员的名字。
+3.  成员的属性描述符。
+
+相当于抽离出来，在类中引用进去，这样可以在不同的类中引用
+
+```typescript
+[
+    {},
+    'setParasm',
+    {
+        value: [Function: setParasm],
+        writable: true,
+        enumerable: false,
+        configurable: true
+    }
+]
+```
+
+```typescript
+const met:MethodDecorator = (...args) => {
+    console.log(args);
+}
+class A {
+    constructor() {
+    }
+    @met
+    getName ():string {
+        return 'iii'
+    }
+}
+const a = new A();
+```
+
+### 属性装饰器
+
+返回两个参数
+
+1.  对于静态成员来说是类的构造函数，对于实例成员是类的原型对象。
+2.  属性的名字。
+
+[ {}, 'name', undefined ]
+
+```typescript
+const met:PropertyDecorator = (...args) => {
+    console.log(args);
+}
+class A {
+    @met
+    name:string
+    constructor() {
+    }
+}
+const a = new A();
+```
+
+### 参数装饰器
+
+返回三个参数
+
+1. 对于静态成员来说是类的构造函数，对于实例成员是类的原型对象。
+2. 成员的名字。
+3.  参数在函数参数列表中的索引。
+
+[ {}, 'setParasm', 0 ]
+
+```typescript
+const met:ParameterDecorator = (...args) => {
+    console.log(args);
+}
+class A {
+    constructor() {
+    }
+    setParasm (@met name:string = '213') {
+    }
+}
+const a = new A();
+```
+
+## 31. Rollup构建TS项目
+
+### Rollup 构建 TS 项目
+
+安装依赖
+
+```bash
+1. 全局安装 rollup npm install rollup-g
+2. 安装 TypeScript npm install typescript -D
+3. 安装 TypeScript 转换器 npm install rollup-plugin-typescript2 -D
+4. 安装代码压缩插件 npm install rollup-plugin-terser -D
+5. 安装 rollupweb 服务 npm install rollup-plugin-serve -D
+6. 安装热更新 npm install rollup-plugin-livereload -D
+7. 引入外部依赖 npm install rollup-plugin-node-resolve -D
+8. 安装配置环境变量用来区分本地和生产 npm install cross-env -D
+9. 替换环境变量给浏览器使用 npm install rollup-plugin-replace -D
+```
+
+配置 json 文件
+
+npm init -y
+
+```json
+{
+    "name": "rollupTs",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "cross-env NODE_ENV=development rollup -c -w",
+        "build":"cross-env NODE_ENV=produaction rollup -c"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "cross-env": "^7.0.3",
+        "rollup-plugin-livereload": "^2.0.5",
+        "rollup-plugin-node-resolve": "^5.2.0",
+        "rollup-plugin-replace": "^2.2.0",
+        "rollup-plugin-serve": "^1.1.0",
+        "rollup-plugin-terser": "^7.0.2",
+        "rollup-plugin-typescript2": "^0.31.1",
+        "typescript": "^4.5.5"
+    }
+}
+```
+
+配置 rollup 文件
+
+```typescript
+console.log(process.env);
+import ts from 'rollup-plugin-typescript2'
+import path from 'path'
+import serve from 'rollup-plugin-serve'
+import livereload from 'rollup-plugin-livereload'
+import { terser } from 'rollup-plugin-terser'
+import resolve from 'rollup-plugin-node-resolve'
+import repacle from 'rollup-plugin-replace'
+const isDev = () => {
+    return process.env.NODE_ENV === 'development'
+}
+export default {
+    input: "./src/main.ts",
+    output: {
+        file: path.resolve(__dirname, './lib/index.js'),
+        format: "umd",
+        sourcemap: true
+    },
+    plugins: [
+        ts(),
+        terser({
+            compress: {
+                drop_console: !isDev()
+            }
+        }),
+        repacle({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+        }),
+        resolve(['.js', '.ts']),
+        isDev() && livereload(),
+        isDev() && serve({
+            open: true,
+            openPage: "/public/index.html"
+        })
+    ]
+}
+```
+
+配置 tsconfig.json
+
+npm run dev 启动就可以尽情的玩耍了
+
+### webpack 构建 TS 项目
+
+```bash
+安装依赖
+安装 webpack npm install webpack -D
+webpack4 以上需要 npm install webpack-cli -D
+编译 TS npm install ts-loader -D
+TS 环境 npm install typescript -D
+热更新服务 npm install webpack-dev-server -D
+HTML 模板 npm install html-webpack-plugin -D
+```
+
+配置文件
+
+```typescript
+const path = require('path')
+const htmlWebpackPlugin = require('html-webpack-plugin')
+module.exports = {
+    entry: "./src/index.ts",
+    mode: "development",
+    output: {
+        path: path.resolve(__dirname, './dist'),
+        filename: "index.js"
+    },
+    stats: "none",
+    resolve: {
+        extensions: ['.ts', '.js'],
+        alias: {
+            '@': path.resolve(__dirname, './src')
+        }
+    },
+    module: {
+        rules: [
+            {
+                test: /\.ts$/,
+                use: "ts-loader"
+            }
+        ]
+    },
+    devServer: {
+        port: 1988,
+        proxy: {}
+    },
+    plugins: [
+        new htmlWebpackPlugin({
+            template: "./public/index.html"
+        })
+    ]
+}
+```
+
+目录结构
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/ts-23-7-25-1.png)
+
+## 32. 实战TS编写发布订阅模式
+
+什么是发布订阅模式，其实小伙伴已经用到了发布订阅模式例如 addEventListener，Vue evnetBus 都属于发布订阅模式
+
+![](https://gitee.com/gybsl/image-upload/raw/master/image_docs/ts-23-7-25-2.png)
+
+```typescript
+interface Evenet{
+    on:(name:string,fn:Function)) => void,
+        emit(name:string,..args:Array<any>) => void,//派发
+            off(name:string,fn:Function)=> void,//移除
+                once(name:string,fn:Function) => void//只执行一次
+}
+                interface List{
+                    [key:string]:Array<Function>
+                }
+class Dispatch implements Event{//通过implements来约束这个类(Evenet)
+    list:List
+    constructor(){
+        this.list = {}
+    }
+    on(name:string,fn:Function){
+        const callback = this.list[name] || []//如果有取到值的话那就是一个数组，没有取到值的话就是一个空数组
+        callback.push(fn)//因为不管怎么说，callback都是数组，所以我们后面的数组也可以直接
+        添加上去
+        this.list[name] = callback
+        console.log(this.list);
+    }
+    emit(name:string,..args:Array<any>){
+        let evnetName = this.list[name]
+        //on监听跟emit派发的时候 name 是需要一样的，不然会出错，所以我们这里要进行一个判断
+        if(evnetName){
+            eventName.forEach(fn=>{
+                //内容从下面的o.emit()传送上来
+                fn.apply(this.args)//第一个参数this指向，第二个参数为数组，这里也刚好是一个数组就直接传进去。会将on监听的数据直接打印出来，这里打印出来66 99
+            })
+        }else{
+            console.error(`名称错误${name}`)
+        }
+    }
+    off(name:string,fn:Function){
+        //off是删除一个函数，所以我们在下面将创建一个fn函数让他来删一下
+        let eventName = this.list[name]
+        //跟emit一样的，需要进行判断有没有值，还有就是函数存不存在，不存在的话就没得删了对吧
+        if(eventName && fn){
+            //我们要通过索引来将其删掉
+            let index = eventName.findIndex(fns=> fns === fn )
+            eventName.splice(index,1)
+            console.log(eventName)
+        }else{
+            console.error(`名称错误${name}`)
+        }
+    }
+    once(name:string,fn:Function){
+        let de = (...args:Array<any>) =>{
+            fn.apply(this,args)//指向到那个只调用一次函数的那里
+            this.off(name,de)//调用完就把它删掉，这就是只能调用一次的原因哈哈
+        }
+        this.on(name,de)//第一个还是名字，第二个临时函数
+    }
+}
+const o = new Dispatch()//初始化
+o.on('post',()=>{//post作为key
+    console.log(66);
+})//第一个参数是事件名称，第二个是回调函数
+o.on('post',(...args:Array<any>)=>{
+    console.log(99,args)
+    //这里我们对第二个回调函数传入了...args，也就是收到了o.emit除了第一个参数后面那些乱七八糟的东西(因为我们设定了any，对接收的类型并没有限制，所以收到什么乱七八糟的东西都不奇怪)，并在控制台打印了出来
+})
+const fn = (...args:Array<any>) => {
+    console.log(args,2)
+}
+o.on('post',fn)//没错，这个就是特地创建出来删掉的
+o.off('post',fn)//将fn删掉
+//o.on('post2',()=>{
+//都会在控制台显示出来
+//})
+o.once('post',(...args:Array<any>)=>{
+    console.log(args,'once')
+})
+o.emit('post',1,false,{name:"小满"})//除了第一个参数一样是事件，后面参数是不限制个数的，而且传什么都行
+o.emit('post',2,false,{name:"小满"})//这里如果收到就是有问题的，因为我们在上面使用once了，只调用一次
+```
+
+上面在off删除中使用到的splice知识点补充
+
+```typescript
+splice(index,len,[item])
+它也可以用来替换 / 删除 / 添加数组内某一个或者几个值（该方法会改变原始数组）
+index: 数组开始下标
+len: 替换 / 删除的长度
+item: 替换的值，删除操作的话 item 为空
+删除：
+// 删除起始下标为 1，长度为 1 的一个值 (len 设置 1，如果为 0，则数组不变)
+var arr = ['a','b','c','d'];
+arr.splice(1,1);
+console.log(arr); //['a','c','d'];
+// 删除起始下标为 1，长度为 2 的一个值 (len 设置 2)
+var arr2 = ['a','b','c','d'] arr2.splice(1,2);
+console.log(arr2); //['a','d']
+替换：
+// 替换起始下标为 1，长度为 1 的一个值为‘ttt’，len 设置的 1
+var arr = ['a','b','c','d'];
+arr.splice(1,1,'ttt');
+console.log(arr); //['a','ttt','c','d']
+// 替换起始下标为 1，长度为 2 的两个值为‘ttt’，len 设置的 1
+var arr2 = ['a','b','c','d'];
+arr2.splice(1,2,'ttt');
+console.log(arr2); //['a','ttt','d']
+添加：
+// 在下标为 1 处添加一项 'ttt'
+var arr = ['a','b','c','d'];
+arr.splice(1,0,'ttt');
+console.log(arr); //['a','ttt','b','c','d']
+```
+
+## 33. TS 进阶用法 proxy & Reflect
+
+proxy：对象代理(是ES6新增的对象拦截器，能够监听到一个对象的变化) 
+
+Reflect：配合proxy来操作对象
+
+### Proxy
+
+Proxy 对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、 枚举、函数调用等）
+
+`target`
+
+要使用 Proxy 包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代 理）。
+
+`handler`
+
+一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时代理 p 的行为。
+
+`handler.get() `本次使用的 get
+
+属性读取操作的捕捉器。
+
+`handler.set()` 本次使用的 set
+
+属性设置操作的捕捉器。
+
+### Reflect
+
+与大多数全局对象不同 Reflect 并非一个构造函数，所以不能通过 new 运算符对其进行调用， 或者将 Reflect 对象作为一个函数来调用。 Reflect 的所有属性和方法都是静态的（就像 Math 对象）
+
+**Reflect.get(target, name, receiver)**
+
+Reflect.get 方法查找并返回 target 对象的 name 属性，如果没有该属性返回 undefined
+
+**Reflect.set(target, name,value, receiver)**
+
+Reflect.set 方法设置 target 对象的 name 属性等于 value 。
+
+```typescript
+type Person{
+    name:string,
+    age:number,
+    text:string
+}
+const proxy = (object:any,key:any)=>{//我们要自己实现proxy啦
+    return new Proxy(object,{
+        get(target,prop,receiver){
+            console.log('================>get',prop);
+            //prop就是一个key，target就是地下那个man的对象，receiver是跟target一样的值，防止上下文错误的
+            return Reflect.get(target,prop,receiver)//这里刚好对应的也是这三个参数
+        }
+        set(target,prop,value,receiver){//多了一个value，因为我们要设置值
+        //日志
+        console.log('================>set',prop);
+        return Reflect.get(target,prop,value,receiver)
+    }
+})
+}
+//日志监听函数
+//由于我们要监听man里面的内容，所以这里可以使用联合类型
+const logAccess = <T>(object: T ,key:"name" | "age" | "text"):T =>{//为了使其灵活度高一点，我们不使其object等于Person，而是为泛型T，使用的时候再去设置
+    return proxy(object,key)
+}
+let man:Person = ({
+    name:"小满"
+    age:22
+    text:"三秒真男人"
+},'name')
+let man2 = logAccess({
+    name:"小余"
+},'name')
+man.age = 30//走set
+man.age//走get
+console.log(man)
+```
+
+泛型优化
+
+```typescript
+const logAccess = <T>(object: T ,key:keyof T):T =>{//为了使其灵活度高一点，我们不使其object等于Person，而是为泛型T，使用的时候再去设置。key也不固定死，而是使用keyof，将我们传入的对象推断为联合类型
+    return proxy(object,key)
+}
+let man2 = logAccess({
+    name:"小余"
+    id:925
+},'id')//就可以动态的去约束类型
+let man2 = logAccess({
+    name:"小余"
+    id:925
+},'id2')//报错，因为我们类型里没有id2
+```
+
+优化完整版
+
+```typescript
+type Person = {
+    name: string,
+    age: number,
+    text: string
+}
+
+const proxy = (object: any, key: any) => {
+    return new Proxy(object, {
+        get(target, prop, receiver) {
+            console.log(`get key======>${key}`);
+            return Reflect.get(target, prop, receiver)
+        },
+        set(target, prop, value, receiver) {
+            console.log(`set key======>${key}`);
+            return Reflect.set(target, prop, value, receiver)
+        }
+    })
+}
+
+const logAccess = <T>(object: T, key: keyof T): T => {
+    return proxy(object, key)
+}
+
+let man: Person = logAccess({
+    name: "小满",
+    age: 20,
+    text: "我的很小"
+}, 'age')
+
+let man2 = logAccess({
+    id:1,
+    name:"小满2"
+}, 'name')
+man.age = 30
+console.log(man);
+```
+
+## 33. TS 进阶用法 Partial & Pick
+
+TypeScript内置高级类型Partial Pick
+
+### Partial
+
+源码
+
+```typescript
+/**
+* Make all properties in T optional
+将T中的所有属性设置为可选
+*/
+type Partial<T> = {
+    [P in keyof T]?: T[P];
+};
+```
+
+手写实现
+
+```typescript
+type Person{
+name:string,
+age:number,
+text:string
+}
+//keyof：将一个接口对象的全部属性取出来变成联合类型
+//keyof的作用就是把我们的属性变成联合类型，在底下就相当于"name"|"age"|"text"。而 in 就是为遍历这个联合类型的每一项，然后放到这个P里(所以P里就是name、age、text)，然后使其变成`?`可选的
+type Par<T> = {//这个T就是我们传过来的Person，所以T[P]就是Person里面name、age、text的内容(string那些啥的)
+    //小满对T[P]的形容方式：通过索引取值的方式
+    [P in keyof T]?:T[P]//所以你在看这个肯定能看懂
+};
+type p = Partial<Person>//这个时候，我们会发现p上面的属性，name、age、text都变成可选的
+```
+
+使用前(范例)
+
+```typescript
+type Person = {
+name:string,
+age:number
+}
+type p = Partial<Person>
+```
+
+使用后(范例)
+
+```typescript
+type p = {
+    name?: string | undefined;
+    age?: number | undefined;
+}
+```
+
+### Pick
+
+从类型定义 T 的属性中，选取指定一组属性，返回一个新的类型定义。
+
+源码
+
+```typescript
+/**
+* From T, pick a set of properties whose keys are in the union K
+*/
+type Pick<T, K extends keyof T> = {
+    [P in K]: T[P];
+};
+```
+
+手写实现
+
+```typescript
+type Person = {
+    name:string,
+    age:number,
+    text:string,
+    address:string
+}
+type Ex = "text" | "age"
+type A = Pick<Person,Ex>
+```
+
+分析(需要结合手写的内容看)
+
+```typescript
+type Pick<T, K extends keyof T> = {//T跟K都是泛型,T相当于我们的Person，K就相当于我们传的联合类型，然后同样也经历了keyof的洗礼，使其变成联合类型，K通过extends被约束了这点，使其只能为T，也就是Person内的值
+    [P in K]: T[P];
+};
+type p = Pick<Person,'age'|'name'>//这里的Person请参考手写实现的Person
+```
+
+## 34. TS 进阶用法 Record & Readonly
+
+### Readonly
+
+和 Partial 很像是吧？只是将Partial替换成了 Readonly
+
+源码
+
+```typescript
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+};
+```
+
+手写实现
+
+```typescript
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];//keyof还是那样，转化为联合类型，in去遍历选项。T[P]通过索引取值的方式
+    //然后为里面每个内容都加上只读属性
+};
+type Person = {
+    name:string,
+    age:number,
+    text:string
+}
+type man = R<Person>
+```
+
+### Record
+
+```bash
+1 keyof any 返回 string number symbol 的联合类型
+2 in 我们可以理解成 for in P 就是 key 遍历 keyof any 就是 string number symbol 类型的每一项
+3 extends 来约束我们的类型
+4 T 直接返回类型
+做到了约束 对象的 key 同时约束了 value
+```
+
+源码
+
+```typescript
+type Record<K extends keyof any, T> = {
+    [P in K]: T;
+};
+```
+
+手写实现
+
+```typescript
+type Rec<K extends keyof any,T> = {//T是泛型，传什么在这里并没有限制
+    [P in K]: T;
+};
+//keyof返回联合类型
+type key = string |number | symbol
+type Person ={
+    name:string,
+    age:number.
+    text:string
+}
+type K = "A"|"B"|"C"//因为我们在这里定义了K，所以let B才只能使用A、B、C，如果这里换成1、2、3，那底下也只能使用1、2、3而不是A、B、C
+type B = Rec<K,Person>//这里会返回成type B = {A:Person;B:Person;C:Person;}的形式
+let obj:B = {
+    A:{name:"小满",age:3,text:"三秒真男人"}//这里值的类型需要是Person的类型，因为在type B中已经定义了
+    B:{name:"小余",age:18,text:"三小时真男人"}
+	C:{name:"狗洛",age:1,text:"零点三秒真男人"}
+}
+```
+
+## 35. TS 进阶用法 infer
+
+infer 是 TypeScript新增到的关键字 充当占位符
+
+我们来实现一个条件类型推断的例子
+
+定义一个类型 如果是数组类型 就返回 数组元素的类型 否则 就传入什么类型 就返回什么类型
+
+```typescript
+type TYPE<T> = T entends Array<any> ? T[number] : T
+type A = TYPE<string[]>//会返回type A = string
+type B = TYPE<(string|number)[]>//会返回type B = string|number
+type C = TYPE<boolean>//返回type C = boolean
+```
+
+### infer
+
+使用 inter 修改
+
+```typescript
+type TYPE<T> = T entends Array<infer U> ? U : T//U不是泛型，而是充当占位符使用，读取
+Array类型然后进行返回
+type TYPE<T> = T entends Array<infer U> ? U : never//限制只能传type T这个元组类型，其他都不能传
+type A = TYPE<string[]>//会返回type A = string
+type B = TYPE<(string|number)[]>//会返回type B = string|number
+type T = [string,number]
+//使其变成联合类型(小技巧)
+type uni = TYPE<T>//返回联合类型type uni = string|number
+type uni = TYPE<T>//返回type uni = never。因为我们进行了限制
+```
+
+## 36. infer 类型提取
+
+### 提取头部元素
+
+```bash
+T extends any[] ：对T进行泛型约束，一个any类型的数组
+type First<T extends any[]> = T extends [infer one,infer two,infer three] ? one:
+[]：对T进行泛型约束为数组类型，用infer提取，提取的变量名对应着Arr的a、b、c。然后决定返
+回one，也就是第一个元素还是空数组
+```
+
+```typescript
+type Arr = ['a','b','c']
+type First<T extends any[]> = T extends [infer one,infer two,infer three]?one:[]
+//ES6进阶版
+type First<T extends any[]> = T extends [infer First,...any[]] ? First : []//1
+...
+type a = First<Arr>
+```
+
+### 提取尾部元素
+
+将头尾反过来了
+
+```typescript
+type Arr = ['a', 'b', 'c']
+type Last<T extends any[]> = T extends [...any[], infer Last] ? Last : []//... 尾部
+type c = Last<Arr>
+```
+
+### 剔除第一个元素 Shift
+
+将除了第一个之外的其他通过ES6语法提取出来
+
+```typescript
+type Arr = ['a','b','c']
+type First<T extends any[]> = T extends [unknown,...infer Rest] ? Rest : []
+type a = First<Arr>
+```
+
+### 剔除尾部元素 pop
+
+将除了第最后一个之外的其他通过ES6语法提取出来
+
+```typescript
+type Arr = ['a','b','c']
+type First<T extends any[]> = T extends [...infer Rest,unknown] ? Rest : []
+type a = First<Arr>
+```
+
+## 37. infer 递归
+
+```typescript
+有这么一个类型
+type Arr = [1, 2, 3, 4]
+
+希望通过一个 ts 工具变成
+type Arr = [4,3,2,1]
+```
+
+具体思路 首先使用泛型约束 约束只能传入数组类型的东西 然后从数组中提取第一个，放入新数组 的末尾，反复此操作，形成递归 满足结束条件返回该类型
+
+```typescript
+type Arr = [1,2,3,4]
+//先来一个泛型约束(对T)，这是通过不断递归拿到最后一个元素(也就是问好后面的那个First)填到最前面，直到没有元素为止(三元表达式)
+
+type ReverArr<T extends any[]> = T extends [infer First,...infer rest] ?
+[...ReverArr<rest>,First] : T
+type Arrb = ReverArr<Arr>
+```
+
