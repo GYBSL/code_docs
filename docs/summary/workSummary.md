@@ -34,7 +34,15 @@ nvm use 版本号		// 使用/切换你需要的版本（这个命令在有些电
 nvm uninstall 版本号	// 卸载/删除node某版本
 ```
 
-## 2. Git Submodule管理git子模块
+## 2. yarn和npm安装依赖的缓存清理
+
+`npm cache verify`
+
+`yarn cache clean`
+
+以上的两个命令可以清除安装依赖时的缓存，可以解决因为缓存导致安装依赖失败的一些问题
+
+## 3. Git Submodule管理git子模块
 
 常用子模块命令：
 
@@ -48,7 +56,7 @@ git submodule foreach git pull 拉取所有子模块
 
 关于git submodule的不错的文章：[Git--子模块（submodule）介绍_git submodule_worthsen的博客-CSDN博客](https://blog.csdn.net/qq_38880380/article/details/123288706)
 
-## 3. Git 常用命令及规范
+## 4. Git 常用命令及规范
 
 ```bash
 git branch #显示本地所有分支，分支名前面有*号的代表当前正处于哪个分支
@@ -79,5 +87,21 @@ commit 提交信息规范∶
     sync: 同步主线或分支的Bug
     
 <类型>: <内容> 冒号后面有空格
+```
+
+## 5. git修改本地项目仓库地址的常用方法
+
+```bash
+1. 先查看本地git仓库的地址
+git remote -v                       // 查看git对应的远程仓库地址
+
+2. 删除本地的git地址，origin就是通过上面的remote -v展示出来的前缀，可能是其他名称
+git remote rm origin                // 删除关联对应的远程仓库地址
+
+3. 再次查看本地git地址信息
+git remote -v                       // 查看是否删除成功，如果没有任何返回结果，表示OK
+
+4. 重新关联一下新的git仓库地址
+git remote add origin "新的仓库地址" // 重新关联git远程仓库地址
 ```
 
