@@ -13,7 +13,7 @@ hero:
 features:
   - title: 前端开发
     emoji: 🌈
-    description: 小编主打前端开发 <br> 主要技术栈：Vue + 小程序👻，  跨端：Uni-app + Flutter🤖
+    description: 小编主打前端开发 <br> 主要技术栈：Vue + React + 小程序👻，  跨端：Uni-app + Flutter🤖
   - title: Java后端
     emoji: 📖
     description: Java后端学习笔记 <br> 学校主修 Java😂，但 Java 只是入门水平😂，Java基础 + Java web + Spring
