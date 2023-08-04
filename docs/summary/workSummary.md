@@ -34,7 +34,34 @@ nvm use 版本号		// 使用/切换你需要的版本（这个命令在有些电
 nvm uninstall 版本号	// 卸载/删除node某版本
 ```
 
-## 2. yarn和npm安装依赖的缓存清理
+## 2. 使用 nvm 安装 node 踩坑
+
+使用nvm安装node之后，使用npm安装依赖的时候报以下错误：
+
+```bash
+npm ERR! Unexpected token '.'
+npm ERR! A complete log of this run can be found in:
+npm ERR! C:\Users\1\AppData\Local\npm-cache\_logs\2023-08-04108_55_20_093Z-debug-0. 1og
+```
+
+网上查了之后，说是nvm的版本问题
+
+1. 先使用 `nvm uninstall v版本号` 卸载了全部的 node 之后
+
+2. 将原来电脑上的 1.1.7 的 nvm 删掉，重新去 nvm 官方的 github 上面下载了新的 1.1.11 版本
+
+3. 再在nvm的安装目录中新建 `nodejs` 目录，然后将 `nodejs` 目录路径添加替换系统环境变量中的 `NVM_SYMLINK` ，这个步骤是防止使用 nvm 安装完 node 之后，npm 没有安装导致的无法使用的问题
+
+4. 来到安装 nvm 的文件夹，找到 `settings.text` 文本文件，里面要添加的两句内容，改镜像：
+
+   ```bash
+   node_mirror: https://npm.taobao.org/mirrors/node/
+   npm_mirror: https://npm.taobao.org/mirrors/npm/
+   ```
+
+5. 然后再使用 nvm 安装想要的 node，就可以放心使用了
+
+## 3. yarn和npm安装依赖的缓存清理
 
 `npm cache verify`
 
@@ -42,7 +69,7 @@ nvm uninstall 版本号	// 卸载/删除node某版本
 
 以上的两个命令可以清除安装依赖时的缓存，可以解决因为缓存导致安装依赖失败的一些问题
 
-## 3. Git Submodule管理git子模块
+## 4. Git Submodule管理git子模块
 
 常用子模块命令：
 
@@ -56,7 +83,7 @@ git submodule foreach git pull 拉取所有子模块
 
 关于git submodule的不错的文章：[Git--子模块（submodule）介绍_git submodule_worthsen的博客-CSDN博客](https://blog.csdn.net/qq_38880380/article/details/123288706)
 
-## 4. Git 常用命令及规范
+## 5. Git 常用命令及规范
 
 ```bash
 git branch #显示本地所有分支，分支名前面有*号的代表当前正处于哪个分支
@@ -89,7 +116,7 @@ commit 提交信息规范∶
 <类型>: <内容> 冒号后面有空格
 ```
 
-## 5. git修改本地项目仓库地址的常用方法
+## 6. git修改本地项目仓库地址的常用方法
 
 ```bash
 1. 先查看本地git仓库的地址
@@ -105,7 +132,7 @@ git remote -v                       // 查看是否删除成功，如果没有�
 git remote add origin "新的仓库地址" // 重新关联git远程仓库地址
 ```
 
-## 6. 微前端架构分享
+## 7. 微前端架构分享
 
 ### 什么是微前端
 
