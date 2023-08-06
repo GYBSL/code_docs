@@ -100,8 +100,8 @@ git branch -m (new-branch-name) #更改分支名称
 
 ```bash
 commit 提交信息规范∶
-	feat: 添加了个很棒的功能
-	fix: 修复了一些bug
+  feat: 添加了个很棒的功能
+  fix: 修复了一些bug
   docs: 更新了一下文档
   chore: 对脚手架做了些更改
   locale: 为国际化做了微小的贡献. module :新增了一个很牛逼的模块
