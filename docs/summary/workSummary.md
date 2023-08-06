@@ -102,16 +102,16 @@ git branch -m (new-branch-name) #更改分支名称
 commit 提交信息规范∶
 	feat: 添加了个很棒的功能
 	fix: 修复了一些bug
-    docs: 更新了一下文档
-    chore: 对脚手架做了些更改
-    locale: 为国际化做了微小的贡献. module :新增了一个很牛逼的模块
-    del: 删除了一些垃圾代码
-    style: 格式(不影响代码运行的变动)refactor:重构（即不是新增功能，也不是修改bug的代码变动)
-    perf: 优化相关，比如提升性能、体验
-    chore: 构建过程或辅助工具的变动
-    revert: 回滚到上一个版本
-    merge: 代码合并
-    sync: 同步主线或分支的Bug
+  docs: 更新了一下文档
+  chore: 对脚手架做了些更改
+  locale: 为国际化做了微小的贡献. module :新增了一个很牛逼的模块
+  del: 删除了一些垃圾代码
+  style: 格式(不影响代码运行的变动)refactor:重构（即不是新增功能，也不是修改bug的代码变动)
+  perf: 优化相关，比如提升性能、体验
+  chore: 构建过程或辅助工具的变动
+  revert: 回滚到上一个版本
+  merge: 代码合并
+  sync: 同步主线或分支的Bug
     
 <类型>: <内容> 冒号后面有空格
 ```
