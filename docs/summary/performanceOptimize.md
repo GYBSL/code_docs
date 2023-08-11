@@ -195,3 +195,68 @@ group:
 
 <style scoped></style>
 ```
+
+
+
+## 3. oss上传文件
+
+前端配置oss
+
+```typescript
+/**获取OSS配置文件 */
+// config中的配置可能就需要和后端协商接口返回了
+export async function getOSSconfig(fileName: string) {
+  const config = {
+    region: "",
+    accessKeyId: ''
+    accessKeySecret: '',
+    bucket: '',
+    endpoint: '',
+  };
+
+  return config;
+}
+```
+
+需要安装一个包 `ali-oss`
+
+```bash
+npm i ali-oss
+```
+
+然后项目中引入，封装一个oss方法
+
+```typescript
+import OSS from 'ali-oss'
+import { getOSSconfig } from '...' // 引入刚刚配置oss连接信息的方法
+
+let OSSClient: OSS
+
+function getOSSclient() {
+  if (OSSClient) return OSSClient
+  const config = getOSSconfig()
+  const client = new OSS(config)
+
+  return client
+}
+
+// 根据需求拼接上传的文件名
+function createFileName(file: File) {
+  // ... 你的代码逻辑 
+}
+
+/**上传文件 */
+export const upLoadFile = (file: File) => {
+  const client = getOSSclient(file?.name)
+  // 上传的文件路径
+  const uploadPath = createFileName(file)
+
+  return client
+    .put(uploadPath, file) // 文件路径 文件对象
+    .then((res: any) => {
+      return res
+    })
+}
+```
+
+然后就可以使用导出的 `upLoadFile` 方法了
