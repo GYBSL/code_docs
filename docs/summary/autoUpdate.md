@@ -35,7 +35,7 @@ npm i -s puppeteer
 
 ```javascript
 #! /usr/bin/env node
-// 此处安装版本为 1.8.0
+
 const puppeteer = require("puppeteer")
 
 // 主要原理在于使用xpath获取html页面dom元素，脚本代替小手自动触发点击事件
