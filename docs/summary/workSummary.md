@@ -201,3 +201,26 @@ Notion AI：微前端是一种前端架构风格，旨在帮助团队构建基�
    - 基座： 如果将公共代码放入到基座中，没有做到完全独立。
    - 微应用：如果每个微应用中都存放公共组件，代码重复率高。
 2. 数据共享：不同微应用之间的数据共享可能会带来一些问题，例如数据的一致性和安全性等问题。
+
+
+
+## 8. git cherry-pick 命令使用
+
+使用场景：如果想将一个 git 分支的部分 commit 合并到其他分支，即可使用 git cherry-pick 命令，选择性将某几次提交（commit）合并到其他分支
+
+我们可以在项目目录下终端中使用以下命令：
+
+```Plain
+// 查看当前分支的提交记录
+git log
+
+// 这里的commit1 commit2是你使用git log查看到的需要合并的commit的哈希值
+// 注意 git cherry-pick 后面哈希值排列的顺序，先提交的放前面，后提交的放后面
+git cherry-pick commit1 commit2 commit3
+```
+
+如果出现提交冲突：
+
+1. 继续执行cherry-pick 首先手动解决有冲突的文件，然后将文件重新加入暂存区(git add)，然后使用如下命令继续执行 `git cherry-pick --continue`
+2. 取消cherry-pick 发生代码冲突后，不想继续cherry-pick,恢复到cherry-pick前的状态 `git cherry-pick --abort`
+3. 退出 cherry pick 发生代码冲突后，退出cherry-pick，代码回不到cherry-pick前的状态，一般很少用 `git cherry-pick --quit`
