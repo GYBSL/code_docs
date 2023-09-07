@@ -16,26 +16,22 @@ group:
 
 ```node
 npm init -y 
-npm i -s puppeteer@1.8.0
+npm i -s puppeteer
 ```
 
 `package.json` 中加入如下配置
 
 ```json
-{
-    "dependencies": {
-        "puppeteer": "1.8.0"
-    },
-    "name": "git-update-pages",
-    "bin": {
-        "update": "index.js"
-    }
+"bin": {
+    "update": "index.js"
 }
 ```
 
 ## 2. 新建index.js
 
 项目根目录中新建 `index.js` 文件
+
+代码中的 waitFor 被我改成了 waitForTimeout ，因为更新到最新版 uppeteer 会报错 waitFor is not a function
 
 ```javascript
 #! /usr/bin/env node
@@ -66,7 +62,7 @@ async function giteeUpdate() {
   await loginButtons[0].click()
   
   // 4. 等待登录成功
-  await page.waitFor(1000)
+  await page.waitForTimeout(1000)
   // 🚨需要设置自己的gitee pages页面🚨
   await page.goto("https://gitee.com/gybsl/code_docs/pages")
   
